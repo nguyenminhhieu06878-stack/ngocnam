@@ -4,7 +4,7 @@ import {
   Send, Mic, MicOff, Volume2, VolumeX, Sparkles, 
   MessageCircle, Loader2 
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../config/api';
 import ReactMarkdown from 'react-markdown';
 import Button from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -114,7 +114,7 @@ function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/chat', {
+      const response = await api.post('/api/chat', {
         message: input,
         conversationHistory: messages
       });

@@ -5,7 +5,7 @@ import {
   FileText, Upload, LogOut, CheckCircle, Clock, 
   Eye, Trash2, X, FileType, Calendar, Tag, AlertCircle 
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../config/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
@@ -41,7 +41,7 @@ function AdminPage() {
 
   const loadDocuments = async () => {
     try {
-      const response = await axios.get('/api/documents');
+      const response = await api.get('/api/documents');
       setDocuments(response.data);
     } catch (error) {
       console.error('Lỗi tải tài liệu:', error);
@@ -60,7 +60,11 @@ function AdminPage() {
     data.append('description', formData.description);
 
     try {
-      await axios.post('/api/documents/upload', data);
+      await api.post('/api/documents/upload', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       alert('✅ Upload thành công!');
       setFormData({ title: '', category: 'Chung', description: '', file: null });
       document.getElementById('fileInput').value = '';
@@ -76,7 +80,7 @@ function AdminPage() {
     if (!confirm('Bạn có chắc muốn xóa tài liệu này?')) return;
 
     try {
-      await axios.delete(`/api/documents/${id}`);
+      await api.delete(`/api/documents/${id}`);
       alert('✅ Xóa thành công!');
       loadDocuments();
     } catch (error) {
