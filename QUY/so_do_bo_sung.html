@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ đồ bổ sung - Hệ thống ElGamal</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            background: white;
+            padding: 20px;
+        }
+        .diagram-container {
+            background: white;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 900px;
+            border: 1px solid #000;
+            page-break-after: always;
+        }
+        .diagram-title {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #000;
+        }
+        
+        /* ERD Diagram */
+        .erd-table {
+            border: 2px solid #000;
+            margin: 20px;
+            display: inline-block;
+            min-width: 250px;
+            background: white;
+        }
+        .erd-header {
+            background: white;
+            color: #000;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #000;
+        }
+        .erd-field {
+            padding: 8px 15px;
+            border-top: 1px solid #000;
+            font-size: 12px;
+            background: white;
+        }
+        .erd-pk {
+            background: white;
+            font-weight: bold;
+        }
+        .erd-fk {
+            background: white;
+        }
+        .erd-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+        }
+        .erd-relation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            background: white;
+            padding: 5px 10px;
+            border: 1px solid #000;
+        }
+        
+        /* Sequence Diagram */
+        .sequence {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+        .actor {
+            text-align: center;
+            width: 120px;
+        }
+        .actor-box {
+            border: 2px solid #000;
+            padding: 15px;
+            background: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .lifeline {
+            width: 2px;
+            background: #000;
+            height: 400px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .message {
+            position: absolute;
+            width: 300px;
+            left: 60px;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+            font-size: 11px;
+        }
+        .message::after {
+            content: '▶';
+            position: absolute;
+            right: -10px;
+            top: -8px;
+            color: #000;
+        }
+        .return-message {
+            border-top: 2px dashed #000;
+        }
+        .return-message::after {
+            content: '◀';
+            left: -10px;
+            right: auto;
+        }
+        
+        /* AES Diagram */
+        .aes-block {
+            border: 2px solid #000;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            background: white;
+            display: inline-block;
+            min-width: 150px;
+        }
+        .aes-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .arrow {
+            font-size: 30px;
+            margin: 0 10px;
+            color: #000;
+        }
+        
+        /* Flowchart */
+        .flowchart {
+            text-align: center;
+        }
+        .flow-box {
+            border: 2px solid #000;
+            padding: 15px 25px;
+            margin: 15px auto;
+            display: inline-block;
+            background: white;
+            min-width: 200px;
+        }
+        .flow-start {
+            border-radius: 50px;
+            background: white;
+            color: #000;
+            font-weight: bold;
+        }
+        .flow-end {
+            border-radius: 50px;
+            background: white;
+            color: #000;
+            font-weight: bold;
+        }
+        .flow-process {
+            background: white;
+            color: #000;
+        }
+        .flow-decision {
+            transform: rotate(45deg);
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #000;
+            border: 2px solid #000;
+        }
+        .flow-decision-text {
+            transform: rotate(-45deg);
+            font-size: 13px;
+        }
+        .flow-arrow {
+            font-size: 40px;
+            color: #000;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sơ đồ 1: ERD Database -->
+<div class="diagram-container">
+    <div class="diagram-title">Hình 3.8: Sơ đồ ERD - Quan hệ giữa bảng Users và ActivityHistory</div>
+    <div class="erd-container">
+        <div class="erd-table">
+            <div class="erd-header">Users</div>
+            <div class="erd-field erd-pk">🔑 id: INTEGER (PK)</div>
+            <div class="erd-field">username: STRING</div>
+            <div class="erd-field">password: STRING</div>
+            <div class="erd-field">role: ENUM</div>
+            <div class="erd-field">createdAt: DATETIME</div>
+            <div class="erd-field">updatedAt: DATETIME</div>
+        </div>
+        
+        <div class="erd-relation">1 ──── n</div>
+        
+        <div class="erd-table">
+            <div class="erd-header">ActivityHistory</div>
+            <div class="erd-field erd-pk">🔑 id: INTEGER (PK)</div>
+            <div class="erd-field erd-fk">🔗 userId: INTEGER (FK)</div>
+            <div class="erd-field">action: STRING</div>
+            <div class="erd-field">details: TEXT</div>
+            <div class="erd-field">createdAt: DATETIME</div>
+            <div class="erd-field">updatedAt: DATETIME</div>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px; font-style: italic; color: #000;">
+        Một User có thể có nhiều ActivityHistory (quan hệ 1-n)
+    </div>
+</div>
+
+<!-- Sơ đồ 2: Sequence Diagram - Đăng ký -->
+<div class="diagram-container">
+    <div class="diagram-title">Hình 3.9: Sơ đồ tuần tự - Quy trình đăng ký tài khoản</div>
+    <div class="sequence">
+        <div class="actor">
+            <div class="actor-box">Client</div>
+            <div class="lifeline">
+                <div class="message" style="top: 50px;">1. POST /api/auth/register<br/>(username, password)</div>
+                <div class="message return-message" style="top: 350px; left: -240px;">6. Thông báo thành công</div>
+            </div>
+        </div>
+        
+        <div class="actor">
+            <div class="actor-box">Server</div>
+            <div class="lifeline">
+                <div class="message" style="top: 100px;">2. Kiểm tra username</div>
+                <div class="message" style="top: 200px;">4. Lưu user</div>
+                <div class="message" style="top: 250px;">5. Ghi log</div>
+            </div>
+        </div>
+        
+        <div class="actor">
+            <div class="actor-box">Database</div>
+            <div class="lifeline">
+                <div class="message return-message" style="top: 150px; left: -240px;">3. Hash password (bcrypt)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sơ đồ 3: Sequence Diagram - Đăng nhập -->
+<div class="diagram-container">
+    <div class="diagram-title">Hình 3.10: Sơ đồ tuần tự - Quy trình đăng nhập và cấp JWT token</div>
+    <div class="sequence">
+        <div class="actor">
+            <div class="actor-box">Client</div>
+            <div class="lifeline">
+                <div class="message" style="top: 50px;">1. POST /api/auth/login<br/>(username, password)</div>
+                <div class="message return-message" style="top: 350px; left: -240px;">7. JWT token + user info</div>
+            </div>
+        </div>
+        
+        <div class="actor">
+            <div class="actor-box">Server</div>
+            <div class="lifeline">
+                <div class="message" style="top: 100px;">2. Tìm user</div>
+                <div class="message" style="top: 200px;">4. Tạo JWT token</div>
+                <div class="message" style="top: 250px;">5. Ghi log LOGIN</div>
+            </div>
+        </div>
+        
+        <div class="actor">
+            <div class="actor-box">Database</div>
+            <div class="lifeline">
+                <div class="message return-message" style="top: 150px; left: -240px;">3. So sánh password<br/>(bcrypt.compare)</div>
+                <div class="message return-message" style="top: 300px; left: -240px;">6. Lưu activity</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Sơ đồ 4: AES-256-CBC -->
+<div class="diagram-container">
+    <div class="diagram-title">Hình 3.11: Sơ đồ hoạt động của AES-256-CBC</div>
+    
+    <div style="margin: 30px 0;">
+        <div style="text-align: center; font-weight: bold; margin-bottom: 20px;">Quá trình mã hóa CBC (Cipher Block Chaining)</div>
+        
+        <div class="aes-flow">
+            <div class="aes-block" style="background: white; border: 2px dashed #000;">
+                <strong>IV</strong><br/>
+                (16 bytes)<br/>
+                Ngẫu nhiên
+            </div>
+            <div class="arrow">⊕</div>
+            <div class="aes-block">
+                <strong>Block 1</strong><br/>
+                Plaintext<br/>
+                (128 bit)
+            </div>
+            <div class="arrow">→</div>
+            <div class="aes-block" style="background: white; border: 2px solid #000; font-weight: bold;">
+                <strong>AES</strong><br/>
+                Encrypt<br/>
+                (Key 256-bit)
+            </div>
+            <div class="arrow">→</div>
+            <div class="aes-block" style="background: white; border: 2px solid #000;">
+                <strong>Block 1</strong><br/>
+                Ciphertext
+            </div>
+        </div>
+        
+        <div class="aes-flow" style="margin-top: 20px;">
+            <div class="aes-block" style="background: white; border: 2px solid #000;">
+                <strong>Block 1</strong><br/>
+                Ciphertext
+            </div>
+            <div class="arrow">⊕</div>
+            <div class="aes-block">
+                <strong>Block 2</strong><br/>
+                Plaintext<br/>
+                (128 bit)
+            </div>
+            <div class="arrow">→</div>
+            <div class="aes-block" style="background: white; border: 2px solid #000; font-weight: bold;">
+                <strong>AES</strong><br/>
+                Encrypt<br/>
+                (Key 256-bit)
+            </div>
+            <div class="arrow">→</div>
+            <div class="aes-block" style="background: white; border: 2px solid #000;">
+                <strong>Block 2</strong><br/>
+                Ciphertext
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; font-style: italic; color: #000;">
+            Mỗi block plaintext được XOR với block ciphertext trước đó trước khi mã hóa<br/>
+            Block đầu tiên sử dụng IV (Initialization Vector) ngẫu nhiên
+        </div>
+    </div>
+    
+    <div style="margin-top: 40px; padding: 20px; background: white; border: 1px solid #000;">
+        <strong>Đặc điểm AES-256-CBC:</strong><br/>
+        • Khóa: 256 bit (32 bytes)<br/>
+        • Block size: 128 bit (16 bytes)<br/>
+        • IV: 128 bit (16 bytes) - được sinh ngẫu nhiên<br/>
+        • Chế độ: CBC (Cipher Block Chaining)<br/>
+        • Độ bảo mật: Rất cao, được chính phủ Mỹ sử dụng
+    </div>
+</div>
+
+<!-- Sơ đồ 5: Flowchart Mã hóa file -->
+<div class="diagram-container">
+    <div class="diagram-title">Hình 3.12: Sơ đồ luồng mã hóa file</div>
+    <div class="flowchart">
+        <div class="flow-box flow-start">Bắt đầu</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box">Client upload file + password</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Multer lưu file tạm<br/>vào thư mục uploads/</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Derive khóa từ password<br/>key = scrypt(password, 'salt', 32)</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Sinh IV ngẫu nhiên<br/>iv = randomBytes(16)</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Tạo cipher stream<br/>createCipheriv('aes-256-cbc', key, iv)</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Ghi IV vào đầu file output</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Pipe: input → cipher → output</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Ghi log ActivityHistory<br/>action = 'FILE_ENCRYPT'</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box">Download file .enc về client</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Xóa file tạm trên server</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-end">Kết thúc</div>
+    </div>
+</div>
+
+<!-- Sơ đồ 6: Flowchart Giải mã file -->
+<div class="diagram-container">
+    <div class="diagram-title">Hình 3.13: Sơ đồ luồng giải mã file</div>
+    <div class="flowchart">
+        <div class="flow-box flow-start">Bắt đầu</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box">Client upload file .enc + password</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Multer lưu file tạm</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Đọc toàn bộ file vào buffer</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Tách IV (16 bytes đầu)<br/>iv = buffer.slice(0, 16)</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Lấy dữ liệu mã hóa<br/>encryptedData = buffer.slice(16)</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Derive khóa từ password<br/>key = scrypt(password, 'salt', 32)</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box flow-process">Tạo decipher<br/>createDecipheriv('aes-256-cbc', key, iv)</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div class="flow-box">Giải mã dữ liệu<br/>decryptedData = decipher.update() + decipher.final()</div>
+        <div class="flow-arrow">↓</div>
+        
+        <div style="margin: 20px 0;">
+            <div class="flow-decision">
+                <div class="flow-decision-text">Password<br/>đúng?</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+            <div style="width: 45%;">
+                <div style="text-align: center; font-weight: bold;">✓ Đúng</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box flow-process">Ghi log ActivityHistory<br/>action = 'FILE_DECRYPT'</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box">Download file gốc về client</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box flow-process">Xóa file tạm</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box flow-end">Kết thúc</div>
+            </div>
+            
+            <div style="width: 45%;">
+                <div style="text-align: center; font-weight: bold;">✗ Sai</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box" style="background: #fff; color: #000; border: 2px solid #000;">Throw Error:<br/>"Giải mã thất bại"</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box">Trả về lỗi 400<br/>cho client</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box flow-process">Xóa file tạm</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box flow-end">Kết thúc</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Sơ đồ 7: Kiến trúc hệ thống với Database -->
+<div class="diagram-container">
+    <div class="diagram-title">Hình 3.14: Kiến trúc tổng thể hệ thống (cập nhật)</div>
+    
+    <div style="display: flex; justify-content: space-around; align-items: stretch; margin: 30px 0;">
+        <!-- Frontend -->
+        <div style="width: 30%; border: 2px solid #000; padding: 20px; background: white;">
+            <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 15px; color: #000;">
+                FRONTEND<br/>(React + Vite)
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>Components:</strong><br/>
+                • Login/Register<br/>
+                • Key Generation<br/>
+                • Encryption/Decryption<br/>
+                • File Upload<br/>
+                • Activity History
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>State Management:</strong><br/>
+                • React Hooks<br/>
+                • Axios HTTP Client<br/>
+                • JWT Token Storage
+            </div>
+        </div>
+        
+        <!-- Backend -->
+        <div style="width: 30%; border: 2px solid #000; padding: 20px; background: white;">
+            <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 15px; color: #000;">
+                BACKEND<br/>(Node.js + Express)
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>Middleware:</strong><br/>
+                • authMiddleware<br/>
+                • roleMiddleware<br/>
+                • Multer (upload)
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>Controllers:</strong><br/>
+                • authController<br/>
+                • fileController
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>Crypto:</strong><br/>
+                • ElGamal (BigInt)<br/>
+                • AES-256-CBC<br/>
+                • bcrypt, JWT
+            </div>
+        </div>
+        
+        <!-- Database -->
+        <div style="width: 30%; border: 2px solid #000; padding: 20px; background: white;">
+            <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 15px; color: #000;">
+                DATABASE<br/>(MySQL + Sequelize)
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>Tables:</strong><br/>
+                • Users<br/>
+                • ActivityHistory
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>Relations:</strong><br/>
+                • Users 1-n ActivityHistory
+            </div>
+            <div style="border: 1px solid #000; padding: 10px; margin: 10px 0; background: white;">
+                <strong>Features:</strong><br/>
+                • Auto timestamps<br/>
+                • Foreign keys<br/>
+                • Indexes
+            </div>
+        </div>
+    </div>
+    
+    <!-- Arrows -->
+    <div style="text-align: center; margin: 20px 0;">
+        <div style="display: inline-block; margin: 0 50px;">
+            <strong>Frontend ⟷ Backend</strong><br/>
+            <span style="font-size: 12px;">HTTP/HTTPS + JWT Token</span>
+        </div>
+        <div style="display: inline-block; margin: 0 50px;">
+            <strong>Backend ⟷ Database</strong><br/>
+            <span style="font-size: 12px;">Sequelize ORM</span>
+        </div>
+    </div>
+</div>
+
+<!-- Hướng dẫn sử dụng -->
+<div class="diagram-container" style="background: white; border: 2px solid #000;">
+    <div style="text-align: center; font-size: 16px; font-weight: bold; color: #000; margin-bottom: 20px;">
+        HƯỚNG DẪN SỬ DỤNG CÁC SƠ ĐỒ
+    </div>
+    
+    <div style="padding: 20px; line-height: 1.8;">
+        <h3 style="color: #000;">Cách chụp màn hình:</h3>
+        <ol style="font-size: 13px;">
+            <li><strong>Mở file này bằng trình duyệt</strong> (Chrome, Firefox, Edge...)</li>
+            <li><strong>Zoom 100%</strong> để đảm bảo chất lượng tốt nhất</li>
+            <li><strong>Chụp từng sơ đồ:</strong>
+                <ul>
+                    <li>Windows: Nhấn <code>Windows + Shift + S</code> → Chọn vùng</li>
+                    <li>Mac: Nhấn <code>Cmd + Shift + 4</code> → Chọn vùng</li>
+                    <li>Hoặc dùng Snipping Tool / Screenshot tool</li>
+                </ul>
+            </li>
+            <li><strong>Lưu ảnh</strong> với tên tương ứng (Hinh_3_8.png, Hinh_3_9.png...)</li>
+            <li><strong>Chèn vào Word:</strong> Insert → Picture → chọn file ảnh</li>
+        </ol>
+        
+        <h3 style="color: #000; margin-top: 20px;">Danh sách sơ đồ đã tạo:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tr style="background: white;">
+                <th style="border: 1px solid #000; padding: 8px;">Số hiệu</th>
+                <th style="border: 1px solid #000; padding: 8px;">Tên sơ đồ</th>
+                <th style="border: 1px solid #000; padding: 8px;">Vị trí trong báo cáo</th>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">Hình 3.8</td>
+                <td style="border: 1px solid #000; padding: 8px;">Sơ đồ ERD - Database</td>
+                <td style="border: 1px solid #000; padding: 8px;">Mục 3.2.4.3</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">Hình 3.9</td>
+                <td style="border: 1px solid #000; padding: 8px;">Sơ đồ tuần tự - Đăng ký</td>
+                <td style="border: 1px solid #000; padding: 8px;">Mục 3.3.4.1</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">Hình 3.10</td>
+                <td style="border: 1px solid #000; padding: 8px;">Sơ đồ tuần tự - Đăng nhập</td>
+                <td style="border: 1px solid #000; padding: 8px;">Mục 3.3.4.2</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">Hình 3.11</td>
+                <td style="border: 1px solid #000; padding: 8px;">Sơ đồ AES-256-CBC</td>
+                <td style="border: 1px solid #000; padding: 8px;">Mục 3.5.4.2</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">Hình 3.12</td>
+                <td style="border: 1px solid #000; padding: 8px;">Sơ đồ luồng mã hóa file</td>
+                <td style="border: 1px solid #000; padding: 8px;">Mục 3.5.4.3</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">Hình 3.13</td>
+                <td style="border: 1px solid #000; padding: 8px;">Sơ đồ luồng giải mã file</td>
+                <td style="border: 1px solid #000; padding: 8px;">Mục 3.5.4.4</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">Hình 3.14</td>
+                <td style="border: 1px solid #000; padding: 8px;">Kiến trúc tổng thể (cập nhật)</td>
+                <td style="border: 1px solid #000; padding: 8px;">Mục 3.2.1</td>
+            </tr>
+        </table>
+        
+        <div style="background: white; padding: 15px; margin-top: 20px; border: 1px solid #000;">
+            <strong>Lưu ý:</strong><br/>
+            • Đảm bảo chụp đủ toàn bộ sơ đồ, không bị cắt<br/>
+            • Chất lượng ảnh nên ở độ phân giải cao (ít nhất 1200px chiều rộng)<br/>
+            • Đặt tên file ảnh rõ ràng để dễ quản lý<br/>
+            • Trong Word, chọn "In line with text" hoặc "Top and bottom" cho ảnh<br/>
+            • Tất cả sơ đồ đã được thiết kế đen trắng, phù hợp in ấn
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

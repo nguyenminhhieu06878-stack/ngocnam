@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bổ sung Báo cáo Đồ án - Hệ thống ElGamal</title>
+    <style>
+        /* Format chuẩn báo cáo đại học Việt Nam */
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 13pt;
+            line-height: 1.5;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 2cm 3cm 2cm 3.5cm; /* Lề trái 3.5cm, phải 2cm, trên dưới 2cm */
+            background: white;
+            color: #000;
+            text-align: justify;
+        }
+        .section {
+            background: white;
+            padding: 0;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        h1 {
+            font-size: 14pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            margin: 20px 0 15px 0;
+            color: #000;
+        }
+        h2 {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        h3 {
+            font-size: 13pt;
+            font-weight: bold;
+            font-style: italic;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            color: #000;
+        }
+        h4 {
+            font-size: 13pt;
+            font-weight: normal;
+            font-style: italic;
+            margin-top: 10px;
+            margin-bottom: 8px;
+            color: #000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13pt;
+        }
+        table, th, td {
+            border: 1px solid #000;
+        }
+        th {
+            background-color: #fff;
+            color: #000;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #000;
+        }
+        td {
+            padding: 8px;
+            border: 1px solid #000;
+        }
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11pt;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .note {
+            border: 1px solid #000;
+            padding: 10px;
+            margin: 10px 0;
+            font-style: italic;
+        }
+        .warning {
+            border: 1px solid #000;
+            padding: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 40px;
+        }
+        li {
+            margin: 5px 0;
+            text-align: justify;
+        }
+        .image-placeholder {
+            border: 1px solid #000;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        p {
+            margin: 10px 0;
+            text-indent: 1cm; /* Thụt đầu dòng */
+            text-align: justify;
+        }
+        .no-indent {
+            text-indent: 0;
+        }
+        strong {
+            font-weight: bold;
+        }
+        em {
+            font-style: italic;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+            font-size: 11pt;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- PHẦN 1: BỔ SUNG VÀO CHƯƠNG 3.1 - YÊU CẦU HỆ THỐNG -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>BỔ SUNG VÀO CHƯƠNG 3 - PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG</h1>
+    <p class="no-indent"><strong>Vị trí chèn:</strong> Thêm vào Chương 3.1.1 - Yêu cầu chức năng (sau bảng yêu cầu YC-10)</p>
+    
+    <p>Ngoài các yêu cầu chức năng cơ bản đã nêu, hệ thống còn được bổ sung các chức năng quan trọng nhằm nâng cao tính bảo mật, khả năng quản lý và trải nghiệm người dùng. Các yêu cầu bổ sung được trình bày trong Bảng 3.2 dưới đây.</p>
+    
+    <p class="no-indent" style="text-align: center; font-weight: bold; margin: 15px 0;">Bảng 3.2: Yêu cầu chức năng bổ sung</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 12%">Mã YC</th>
+                <th style="width: 22%">Yêu cầu</th>
+                <th>Mô tả chi tiết</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: center"><strong>YC-11</strong></td>
+                <td>Đăng ký tài khoản</td>
+                <td>Cho phép người dùng tạo tài khoản mới với username và password. Mật khẩu được hash bằng bcrypt với salt rounds = 10 trước khi lưu vào cơ sở dữ liệu</td>
+            </tr>
+            <tr>
+                <td style="text-align: center"><strong>YC-12</strong></td>
+                <td>Đăng nhập hệ thống</td>
+                <td>Xác thực người dùng bằng username và password, cấp JWT token với thời gian sống 24 giờ để truy cập các chức năng được bảo vệ</td>
+            </tr>
+            <tr>
+                <td style="text-align: center"><strong>YC-13</strong></td>
+                <td>Phân quyền người dùng</td>
+                <td>Hệ thống hỗ trợ 2 vai trò: user (người dùng thường) và admin (quản trị viên) với các quyền truy cập khác nhau đối với các chức năng</td>
+            </tr>
+            <tr>
+                <td style="text-align: center"><strong>YC-14</strong></td>
+                <td>Mã hóa file</td>
+                <td>Cho phép người dùng upload và mã hóa file bất kỳ sử dụng thuật toán AES-256-CBC với password do người dùng cung cấp</td>
+            </tr>
+            <tr>
+                <td style="text-align: center"><strong>YC-15</strong></td>
+                <td>Giải mã file</td>
+                <td>Cho phép người dùng upload file đã mã hóa (định dạng .enc) và giải mã bằng password đúng để khôi phục file gốc</td>
+            </tr>
+            <tr>
+                <td style="text-align: center"><strong>YC-16</strong></td>
+                <td>Lịch sử hoạt động</td>
+                <td>Ghi lại và hiển thị tất cả các hoạt động của người dùng bao gồm: đăng ký, đăng nhập, sinh khóa, mã hóa tin nhắn, giải mã tin nhắn, mã hóa file, giải mã file</td>
+            </tr>
+            <tr>
+                <td style="text-align: center"><strong>YC-17</strong></td>
+                <td>Đăng xuất</td>
+                <td>Cho phép người dùng đăng xuất khỏi hệ thống và xóa token xác thực khỏi bộ nhớ trình duyệt</td>
+            </tr>
+            <tr>
+                <td style="text-align: center"><strong>YC-18</strong></td>
+                <td>Kiểm tra độ mạnh mật khẩu</td>
+                <td>Hiển thị realtime độ mạnh của mật khẩu khi đăng ký dựa trên 5 tiêu chí: độ dài, chữ hoa, chữ thường, số, ký tự đặc biệt</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note">
+        <p class="no-indent"><strong>Ghi chú:</strong> Các chức năng YC-11 đến YC-18 là những tính năng mới được bổ sung để nâng cao tính bảo mật và trải nghiệm người dùng của hệ thống. Chúng tạo nên một hệ thống hoàn chỉnh hơn, không chỉ dừng lại ở việc minh họa thuật toán ElGamal mà còn có thể ứng dụng thực tế trong môi trường sản xuất.</p>
+    </div>
+</div>
+            <tr>
+                <td><strong>YC-14</strong></td>
+                <td>Mã hóa file</td>
+                <td>Cho phép người dùng upload và mã hóa file bất kỳ sử dụng thuật toán AES-256-CBC với password do người dùng cung cấp</td>
+            </tr>
+            <tr>
+                <td><strong>YC-15</strong></td>
+                <td>Giải mã file</td>
+                <td>Cho phép người dùng upload file đã mã hóa (.enc) và giải mã bằng password đúng để khôi phục file gốc</td>
+            </tr>
+            <tr>
+                <td><strong>YC-16</strong></td>
+                <td>Lịch sử hoạt động</td>
+                <td>Ghi lại và hiển thị tất cả các hoạt động của người dùng bao gồm: đăng ký, đăng nhập, sinh khóa, mã hóa tin nhắn/file, giải mã tin nhắn/file</td>
+            </tr>
+            <tr>
+                <td><strong>YC-17</strong></td>
+                <td>Đăng xuất</td>
+                <td>Cho phép người dùng đăng xuất khỏi hệ thống và xóa token xác thực</td>
+            </tr>
+            <tr>
+                <td><strong>YC-18</strong></td>
+                <td>Kiểm tra độ mạnh mật khẩu</td>
+                <td>Hiển thị realtime độ mạnh của mật khẩu khi đăng ký (Rất yếu, Yếu, Trung bình, Mạnh, Rất mạnh)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note">
+        <strong>📌 Lưu ý:</strong> Các chức năng YC-11 đến YC-18 là những tính năng mới được bổ sung để nâng cao tính bảo mật và trải nghiệm người dùng của hệ thống. Chúng tạo nên một hệ thống hoàn chỉnh hơn, không chỉ dừng lại ở việc minh họa thuật toán ElGamal mà còn có thể ứng dụng thực tế.
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 2: BỔ SUNG VÀO CHƯƠNG 3.2 - THIẾT KẾ CƠ SỞ DỮ LIỆU -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 2: THIẾT KẾ CƠ SỞ DỮ LIỆU</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm mục mới 3.2.4 sau phần "3.2.3. Luồng dữ liệu trong hệ thống"</p>
+    
+    <h2>3.2.4. Thiết kế cơ sở dữ liệu</h2>
+    
+    <p>Hệ thống sử dụng <strong>MySQL</strong> làm hệ quản trị cơ sở dữ liệu và <strong>Sequelize ORM</strong> để tương tác với database. Cơ sở dữ liệu được thiết kế với 2 bảng chính:</p>
+
+    <h3>3.2.4.1. Bảng Users (Người dùng)</h3>
+    
+    <p>Bảng Users lưu trữ thông tin tài khoản người dùng của hệ thống.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%">Tên trường</th>
+                <th style="width: 20%">Kiểu dữ liệu</th>
+                <th style="width: 15%">Ràng buộc</th>
+                <th>Mô tả</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>id</strong></td>
+                <td>INTEGER</td>
+                <td>PRIMARY KEY, AUTO_INCREMENT</td>
+                <td>Mã định danh duy nhất của người dùng</td>
+            </tr>
+            <tr>
+                <td><strong>username</strong></td>
+                <td>STRING</td>
+                <td>NOT NULL, UNIQUE</td>
+                <td>Tên đăng nhập của người dùng, không được trùng lặp</td>
+            </tr>
+            <tr>
+                <td><strong>password</strong></td>
+                <td>STRING</td>
+                <td>NOT NULL</td>
+                <td>Mật khẩu đã được hash bằng bcrypt (salt rounds = 10)</td>
+            </tr>
+            <tr>
+                <td><strong>role</strong></td>
+                <td>ENUM('admin', 'user')</td>
+                <td>DEFAULT 'user'</td>
+                <td>Vai trò của người dùng: admin (quản trị viên) hoặc user (người dùng thường)</td>
+            </tr>
+            <tr>
+                <td><strong>createdAt</strong></td>
+                <td>DATETIME</td>
+                <td>AUTO</td>
+                <td>Thời gian tạo tài khoản (tự động bởi Sequelize)</td>
+            </tr>
+            <tr>
+                <td><strong>updatedAt</strong></td>
+                <td>DATETIME</td>
+                <td>AUTO</td>
+                <td>Thời gian cập nhật tài khoản lần cuối (tự động bởi Sequelize)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note">
+        <strong>🔒 Bảo mật mật khẩu:</strong> Mật khẩu không được lưu dưới dạng plain text. Trước khi lưu vào database, mật khẩu được hash bằng thuật toán bcrypt với salt rounds = 10. Khi người dùng đăng nhập, mật khẩu nhập vào sẽ được so sánh với hash đã lưu bằng phương thức <code>bcrypt.compare()</code>.
+    </div>
+
+    <h3>3.2.4.2. Bảng ActivityHistory (Lịch sử hoạt động)</h3>
+    
+    <p>Bảng ActivityHistory ghi lại tất cả các hoạt động quan trọng của người dùng trong hệ thống, phục vụ mục đích audit và theo dõi.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%">Tên trường</th>
+                <th style="width: 20%">Kiểu dữ liệu</th>
+                <th style="width: 15%">Ràng buộc</th>
+                <th>Mô tả</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>id</strong></td>
+                <td>INTEGER</td>
+                <td>PRIMARY KEY, AUTO_INCREMENT</td>
+                <td>Mã định danh duy nhất của bản ghi lịch sử</td>
+            </tr>
+            <tr>
+                <td><strong>userId</strong></td>
+                <td>INTEGER</td>
+                <td>NOT NULL, FOREIGN KEY</td>
+                <td>Khóa ngoại tham chiếu đến bảng Users (id), xác định người dùng thực hiện hành động</td>
+            </tr>
+            <tr>
+                <td><strong>action</strong></td>
+                <td>STRING</td>
+                <td>NOT NULL</td>
+                <td>Loại hành động: REGISTER, LOGIN, GENERATE_KEYS, ENCRYPT_MESSAGE, DECRYPT_MESSAGE, FILE_ENCRYPT, FILE_DECRYPT</td>
+            </tr>
+            <tr>
+                <td><strong>details</strong></td>
+                <td>TEXT</td>
+                <td>NULL</td>
+                <td>Mô tả chi tiết về hành động (ví dụ: "Đã mã hóa file: document.pdf")</td>
+            </tr>
+            <tr>
+                <td><strong>createdAt</strong></td>
+                <td>DATETIME</td>
+                <td>AUTO</td>
+                <td>Thời gian thực hiện hành động (tự động bởi Sequelize)</td>
+            </tr>
+            <tr>
+                <td><strong>updatedAt</strong></td>
+                <td>DATETIME</td>
+                <td>AUTO</td>
+                <td>Thời gian cập nhật bản ghi (tự động bởi Sequelize)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>3.2.4.3. Quan hệ giữa các bảng</h3>
+    
+    <p>Hệ thống có mối quan hệ <strong>One-to-Many</strong> (1-n) giữa bảng Users và ActivityHistory:</p>
+    
+    <ul>
+        <li><strong>Một người dùng</strong> (Users) có thể có <strong>nhiều bản ghi lịch sử</strong> (ActivityHistory)</li>
+        <li><strong>Một bản ghi lịch sử</strong> (ActivityHistory) chỉ thuộc về <strong>một người dùng</strong> (Users)</li>
+    </ul>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 3.X: Sơ đồ ERD (Entity Relationship Diagram)</strong><br>
+        <em>Chèn sơ đồ ERD thể hiện quan hệ giữa bảng Users và ActivityHistory</em><br>
+        <small>Gợi ý: Vẽ bằng draw.io hoặc MySQL Workbench</small>
+    </div>
+
+    <p>Trong code Sequelize, quan hệ được định nghĩa như sau:</p>
+    
+    <div class="code-block">
+// Trong file backend/models/ActivityHistory.js
+User.hasMany(ActivityHistory, { foreignKey: 'userId' });
+ActivityHistory.belongsTo(User, { foreignKey: 'userId' });
+    </div>
+
+    <h3>3.2.4.4. Cấu hình kết nối Database</h3>
+    
+    <p>Thông tin kết nối database được lưu trong file <code>.env</code> và được load thông qua module <code>dotenv</code>:</p>
+    
+    <div class="code-block">
+// File: backend/.env
+PORT=5001
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=quy_db
+JWT_SECRET=your_jwt_secret_key_here
+NODE_ENV=development
+    </div>
+
+    <p>Sequelize được cấu hình trong file <code>backend/config/database.js</code>:</p>
+    
+    <div class="code-block">
+const { Sequelize } = require('sequelize');
+require('dotenv').config();
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    dialect: 'mysql',
+    logging: false,  // Tắt log SQL queries
+  }
+);
+
+module.exports = sequelize;
+    </div>
+
+    <div class="warning">
+        <strong>⚠️ Lưu ý bảo mật:</strong> File <code>.env</code> chứa thông tin nhạy cảm như mật khẩu database và JWT secret. File này <strong>không được</strong> commit lên Git repository. Cần thêm <code>.env</code> vào file <code>.gitignore</code> để tránh lộ thông tin.
+    </div>
+
+    <h3>3.2.4.5. Đồng bộ Database</h3>
+    
+    <p>Khi server khởi động, Sequelize tự động đồng bộ các model với database:</p>
+    
+    <div class="code-block">
+// Trong file backend/server.js
+sequelize.sync({ alter: true }).then(() => {
+    console.log('Database synced');
+    app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+}).catch(err => {
+    console.error('Unable to connect to the database:', err);
+});
+    </div>
+
+    <p>Tùy chọn <code>{ alter: true }</code> cho phép Sequelize tự động cập nhật cấu trúc bảng khi có thay đổi trong model mà không xóa dữ liệu hiện có.</p>
+
+    <div class="note">
+        <strong>💡 Ghi chú:</strong> Trong môi trường production, nên sử dụng migration thay vì <code>sync()</code> để quản lý thay đổi database một cách có kiểm soát hơn.
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 3: BỔ SUNG VÀO CHƯƠNG 3.3 - HỆ THỐNG XÁC THỰC VÀ PHÂN QUYỀN -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 3: HỆ THỐNG XÁC THỰC VÀ PHÂN QUYỀN</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm mục mới 3.3.4 sau phần "3.3.3. Các thư viện hỗ trợ"</p>
+    
+    <h2>3.3.4. Hệ thống xác thực và phân quyền</h2>
+    
+    <p>Để đảm bảo tính bảo mật, hệ thống triển khai cơ chế xác thực người dùng bằng <strong>JWT (JSON Web Token)</strong> và phân quyền dựa trên vai trò (Role-Based Access Control - RBAC).</p>
+
+    <h3>3.3.4.1. Quy trình đăng ký tài khoản</h3>
+    
+    <p>Khi người dùng đăng ký tài khoản mới, hệ thống thực hiện các bước sau:</p>
+    
+    <ol>
+        <li><strong>Nhận thông tin:</strong> Client gửi username, password và role (tùy chọn) đến endpoint <code>POST /api/auth/register</code></li>
+        <li><strong>Kiểm tra tính hợp lệ:</strong> Kiểm tra username chưa tồn tại trong database</li>
+        <li><strong>Hash mật khẩu:</strong> Sử dụng bcrypt để hash mật khẩu với salt rounds = 10</li>
+        <li><strong>Lưu vào database:</strong> Tạo bản ghi mới trong bảng Users</li>
+        <li><strong>Ghi log:</strong> Tạo bản ghi trong ActivityHistory với action = "REGISTER"</li>
+        <li><strong>Trả về kết quả:</strong> Thông báo đăng ký thành công</li>
+    </ol>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 3.Y: Sơ đồ tuần tự (Sequence Diagram) - Quy trình đăng ký</strong><br>
+        <em>Chèn sơ đồ thể hiện tương tác giữa Client, Server, Database trong quá trình đăng ký</em>
+    </div>
+
+    <h3>3.3.4.2. Quy trình đăng nhập</h3>
+    
+    <p>Khi người dùng đăng nhập, hệ thống thực hiện:</p>
+    
+    <ol>
+        <li><strong>Nhận thông tin:</strong> Client gửi username và password đến <code>POST /api/auth/login</code></li>
+        <li><strong>Tìm người dùng:</strong> Truy vấn database để tìm user với username tương ứng</li>
+        <li><strong>Xác thực mật khẩu:</strong> So sánh password nhập vào với hash đã lưu bằng <code>bcrypt.compare()</code></li>
+        <li><strong>Tạo JWT token:</strong> Nếu xác thực thành công, tạo JWT token chứa thông tin user (id, role)</li>
+        <li><strong>Ghi log:</strong> Tạo bản ghi trong ActivityHistory với action = "LOGIN"</li>
+        <li><strong>Trả về token:</strong> Gửi token và thông tin user về client</li>
+    </ol>
+
+    <p><strong>Cấu trúc JWT Token:</strong></p>
+    
+    <div class="code-block">
+// Payload của JWT token
+{
+  "id": 1,           // User ID
+  "role": "user",    // Vai trò: "user" hoặc "admin"
+  "iat": 1234567890, // Issued At (thời gian tạo)
+  "exp": 1234654290  // Expiration (thời gian hết hạn - 24h sau khi tạo)
+}
+    </div>
+
+    <p>Token được ký bằng <code>JWT_SECRET</code> từ file .env và có thời gian sống là 24 giờ.</p>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 3.Z: Sơ đồ tuần tự - Quy trình đăng nhập</strong><br>
+        <em>Chèn sơ đồ thể hiện tương tác trong quá trình đăng nhập và cấp token</em>
+    </div>
+
+    <h3>3.3.4.3. Middleware xác thực (Authentication Middleware)</h3>
+    
+    <p>Để bảo vệ các API endpoint, hệ thống sử dụng <code>authMiddleware</code> để xác thực JWT token:</p>
+    
+    <div class="code-block">
+// File: backend/middleware/authMiddleware.js
+const authMiddleware = async (req, res, next) => {
+  // 1. Lấy token từ header Authorization
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+
+  if (!token) {
+    return res.status(401).json({ 
+      error: 'Không có token, quyền truy cập bị từ chối' 
+    });
+  }
+
+  try {
+    // 2. Xác thực token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // 3. Tìm user trong database
+    const user = await User.findByPk(decoded.id);
+
+    if (!user) {
+      throw new Error();
+    }
+
+    // 4. Gắn thông tin user vào request
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Token không hợp lệ' });
+  }
+};
+    </div>
+
+    <p>Middleware này được áp dụng cho tất cả các endpoint cần bảo vệ:</p>
+    
+    <div class="code-block">
+// Ví dụ sử dụng middleware
+app.post('/api/generate-keys', authMiddleware, (req, res) => {
+  // Chỉ user đã đăng nhập mới truy cập được
+  // Thông tin user có sẵn trong req.user
+});
+    </div>
+
+    <h3>3.3.4.4. Middleware phân quyền (Authorization Middleware)</h3>
+    
+    <p>Ngoài xác thực, hệ thống còn có middleware phân quyền dựa trên vai trò:</p>
+    
+    <div class="code-block">
+// File: backend/middleware/authMiddleware.js
+const roleMiddleware = (roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        error: 'Bạn không có quyền thực hiện hành động này' 
+      });
+    }
+    next();
+  };
+};
+    </div>
+
+    <p>Middleware này cho phép giới hạn truy cập dựa trên vai trò:</p>
+    
+    <div class="code-block">
+// Chỉ admin mới được truy cập
+app.get('/api/admin/users', 
+  authMiddleware, 
+  roleMiddleware(['admin']), 
+  (req, res) => {
+    // Xử lý logic cho admin
+  }
+);
+
+// Cả user và admin đều được truy cập
+app.post('/api/encrypt', 
+  authMiddleware, 
+  roleMiddleware(['user', 'admin']), 
+  (req, res) => {
+    // Xử lý mã hóa
+  }
+);
+    </div>
+
+    <h3>3.3.4.5. Bảng phân quyền chức năng</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 40%">Chức năng</th>
+                <th style="width: 20%">User</th>
+                <th style="width: 20%">Admin</th>
+                <th style="width: 20%">Guest (Chưa đăng nhập)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Đăng ký tài khoản</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+            </tr>
+            <tr>
+                <td>Đăng nhập</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+            </tr>
+            <tr>
+                <td>Sinh khóa ElGamal</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✗</td>
+            </tr>
+            <tr>
+                <td>Mã hóa tin nhắn</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✗</td>
+            </tr>
+            <tr>
+                <td>Giải mã tin nhắn</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✗</td>
+            </tr>
+            <tr>
+                <td>Mã hóa file</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✗</td>
+            </tr>
+            <tr>
+                <td>Giải mã file</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✗</td>
+            </tr>
+            <tr>
+                <td>Xem lịch sử cá nhân</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✗</td>
+            </tr>
+            <tr>
+                <td>Xem lịch sử tất cả user</td>
+                <td style="text-align: center">✗</td>
+                <td style="text-align: center">✓</td>
+                <td style="text-align: center">✗</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note">
+        <strong>📌 Lưu ý:</strong> Trong phiên bản hiện tại, hệ thống chủ yếu phục vụ mục đích học tập nên chưa triển khai đầy đủ các chức năng dành riêng cho admin. Tuy nhiên, kiến trúc đã sẵn sàng để mở rộng các chức năng quản trị trong tương lai.
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 4: BỔ SUNG VÀO CHƯƠNG 3.5 - MÃ HÓA FILE VỚI AES-256 -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 4: MÃ HÓA VÀ GIẢI MÃ FILE</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm mục mới 3.5.4 sau phần "3.5.3. API giải mã"</p>
+    
+    <h2>3.5.4. Mã hóa và giải mã file với AES-256-CBC</h2>
+    
+    <p>Ngoài mã hóa tin nhắn bằng ElGamal, hệ thống còn hỗ trợ mã hóa file sử dụng thuật toán <strong>AES-256-CBC</strong> (Advanced Encryption Standard với chế độ Cipher Block Chaining). Đây là thuật toán mã hóa đối xứng được sử dụng rộng rãi và có độ bảo mật cao.</p>
+
+    <h3>3.5.4.1. Lý do sử dụng AES thay vì ElGamal cho file</h3>
+    
+    <p>ElGamal là thuật toán mã hóa bất đối xứng, có những hạn chế khi mã hóa dữ liệu lớn:</p>
+    
+    <ul>
+        <li><strong>Kích thước bản mã lớn:</strong> Bản mã ElGamal gấp đôi kích thước bản rõ</li>
+        <li><strong>Tốc độ chậm:</strong> Các phép toán modulo với số lớn rất tốn thời gian</li>
+        <li><strong>Giới hạn kích thước:</strong> Chỉ mã hóa được dữ liệu có kích thước nhỏ hơn modulus p</li>
+    </ul>
+
+    <p>Do đó, với file có kích thước lớn, hệ thống sử dụng AES-256-CBC vì:</p>
+    
+    <ul>
+        <li><strong>Tốc độ nhanh:</strong> Nhanh hơn ElGamal hàng trăm lần</li>
+        <li><strong>Hiệu quả:</strong> Kích thước bản mã gần bằng bản rõ</li>
+        <li><strong>Không giới hạn kích thước:</strong> Có thể mã hóa file bất kỳ</li>
+        <li><strong>Độ bảo mật cao:</strong> AES-256 là chuẩn mã hóa được chính phủ Mỹ sử dụng</li>
+    </ul>
+
+    <h3>3.5.4.2. Thuật toán AES-256-CBC</h3>
+    
+    <p><strong>AES (Advanced Encryption Standard)</strong> là thuật toán mã hóa khối đối xứng, được NIST (National Institute of Standards and Technology) công bố năm 2001 để thay thế DES. AES-256 sử dụng khóa 256 bit, cung cấp mức độ bảo mật rất cao.</p>
+
+    <p><strong>CBC (Cipher Block Chaining)</strong> là một chế độ hoạt động của mã hóa khối, trong đó:</p>
+    
+    <ul>
+        <li>Dữ liệu được chia thành các khối 128 bit</li>
+        <li>Mỗi khối bản rõ được XOR với khối bản mã trước đó trước khi mã hóa</li>
+        <li>Khối đầu tiên được XOR với <strong>IV (Initialization Vector)</strong> - vector khởi tạo ngẫu nhiên</li>
+        <li>Điều này đảm bảo cùng một bản rõ sẽ tạo ra bản mã khác nhau mỗi lần mã hóa</li>
+    </ul>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 3.A: Sơ đồ hoạt động của AES-256-CBC</strong><br>
+        <em>Chèn sơ đồ minh họa quá trình mã hóa CBC với các khối được chain lại</em>
+    </div>
+
+    <h3>3.5.4.3. Quy trình mã hóa file</h3>
+    
+    <p>Khi người dùng upload file để mã hóa, hệ thống thực hiện các bước sau:</p>
+    
+    <ol>
+        <li><strong>Upload file:</strong> Client gửi file và password đến <code>POST /api/files/encrypt</code></li>
+        <li><strong>Lưu file tạm:</strong> Multer middleware lưu file vào thư mục <code>uploads/</code> với tên ngẫu nhiên</li>
+        <li><strong>Tạo khóa từ password:</strong> Sử dụng <code>crypto.scryptSync()</code> để derive khóa 256-bit từ password
+            <div class="code-block">
+const key = crypto.scryptSync(password, 'salt', 32);
+// 32 bytes = 256 bits
+            </div>
+        </li>
+        <li><strong>Sinh IV ngẫu nhiên:</strong> Tạo Initialization Vector 16 bytes
+            <div class="code-block">
+const iv = crypto.randomBytes(16);
+// 16 bytes = 128 bits
+            </div>
+        </li>
+        <li><strong>Mã hóa file:</strong> Sử dụng cipher stream để mã hóa
+            <div class="code-block">
+const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+const input = fs.createReadStream(inputPath);
+const output = fs.createWriteStream(outputPath);
+
+// Ghi IV vào đầu file (cần cho giải mã)
+output.write(iv);
+
+// Pipe data qua cipher
+input.pipe(cipher).pipe(output);
+            </div>
+        </li>
+        <li><strong>Ghi log:</strong> Tạo bản ghi ActivityHistory với action = "FILE_ENCRYPT"</li>
+        <li><strong>Trả về file:</strong> Download file đã mã hóa (.enc) về client</li>
+        <li><strong>Dọn dẹp:</strong> Xóa file tạm trên server</li>
+    </ol>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 3.B: Sơ đồ luồng mã hóa file</strong><br>
+        <em>Chèn flowchart thể hiện các bước mã hóa file từ upload đến download</em>
+    </div>
+
+    <h3>3.5.4.4. Quy trình giải mã file</h3>
+    
+    <p>Khi người dùng upload file đã mã hóa để giải mã:</p>
+    
+    <ol>
+        <li><strong>Upload file .enc:</strong> Client gửi file và password đến <code>POST /api/files/decrypt</code></li>
+        <li><strong>Đọc IV:</strong> Đọc 16 bytes đầu tiên của file để lấy IV
+            <div class="code-block">
+const fileBuffer = fs.readFileSync(inputPath);
+const iv = fileBuffer.slice(0, 16);
+const encryptedData = fileBuffer.slice(16);
+            </div>
+        </li>
+        <li><strong>Tạo khóa từ password:</strong> Derive khóa giống như lúc mã hóa
+            <div class="code-block">
+const key = crypto.scryptSync(password, 'salt', 32);
+            </div>
+        </li>
+        <li><strong>Giải mã:</strong> Sử dụng decipher để giải mã
+            <div class="code-block">
+const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+const decryptedData = Buffer.concat([
+    decipher.update(encryptedData), 
+    decipher.final()
+]);
+            </div>
+        </li>
+        <li><strong>Xử lý lỗi:</strong> Nếu password sai, <code>decipher.final()</code> sẽ throw error</li>
+        <li><strong>Ghi log:</strong> Tạo bản ghi ActivityHistory với action = "FILE_DECRYPT"</li>
+        <li><strong>Trả về file:</strong> Download file gốc đã giải mã về client</li>
+        <li><strong>Dọn dẹp:</strong> Xóa file tạm trên server</li>
+    </ol>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 3.C: Sơ đồ luồng giải mã file</strong><br>
+        <em>Chèn flowchart thể hiện các bước giải mã file</em>
+    </div>
+
+    <h3>3.5.4.5. API Endpoints cho mã hóa file</h3>
+    
+    <p><strong>API Mã hóa file:</strong></p>
+    
+    <div class="code-block">
+POST /api/files/encrypt
+
+Headers:
+  Authorization: Bearer {jwt_token}
+  Content-Type: multipart/form-data
+
+Body (form-data):
+  file: [File binary]
+  password: "your_password"
+
+Response:
+  - Success: File download (.enc)
+  - Error: { "error": "Mô tả lỗi" }
+    </div>
+
+    <p><strong>API Giải mã file:</strong></p>
+    
+    <div class="code-block">
+POST /api/files/decrypt
+
+Headers:
+  Authorization: Bearer {jwt_token}
+  Content-Type: multipart/form-data
+
+Body (form-data):
+  file: [File .enc binary]
+  password: "your_password"
+
+Response:
+  - Success: File download (file gốc)
+  - Error: { "error": "Giải mã thất bại. Mật khẩu sai..." }
+    </div>
+
+    <h3>3.5.4.6. Bảo mật trong mã hóa file</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30%">Khía cạnh bảo mật</th>
+                <th>Giải pháp áp dụng</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Key Derivation</strong></td>
+                <td>Sử dụng <code>scrypt</code> để derive khóa từ password. Scrypt là hàm KDF (Key Derivation Function) chống lại brute-force attack</td>
+            </tr>
+            <tr>
+                <td><strong>Initialization Vector</strong></td>
+                <td>IV được sinh ngẫu nhiên cho mỗi lần mã hóa, đảm bảo cùng file với cùng password sẽ tạo ra bản mã khác nhau</td>
+            </tr>
+            <tr>
+                <td><strong>Xóa file tạm</strong></td>
+                <td>File upload và file đã xử lý được xóa ngay sau khi gửi về client, không lưu trữ trên server</td>
+            </tr>
+            <tr>
+                <td><strong>Xác thực người dùng</strong></td>
+                <td>Yêu cầu JWT token hợp lệ, chỉ user đã đăng nhập mới sử dụng được</td>
+            </tr>
+            <tr>
+                <td><strong>Giới hạn kích thước</strong></td>
+                <td>Multer có thể cấu hình giới hạn kích thước file upload để tránh DoS attack</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="warning">
+        <strong>⚠️ Lưu ý quan trọng:</strong>
+        <ul>
+            <li>Password không được lưu trữ, chỉ được sử dụng để derive khóa mã hóa</li>
+            <li>Nếu quên password, <strong>không thể</strong> khôi phục file đã mã hóa</li>
+            <li>Salt trong scrypt hiện tại là cố định ('salt'), trong production nên sử dụng salt ngẫu nhiên và lưu cùng file</li>
+            <li>IV được lưu ở đầu file mã hóa, đây là thực hành chuẩn và an toàn</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 5: BỔ SUNG VÀO CHƯƠNG 3.5 - LỊCH SỬ HOẠT ĐỘNG -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 5: HỆ THỐNG LỊCH SỬ HOẠT ĐỘNG</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm mục mới 3.5.5 sau phần "3.5.4. Mã hóa và giải mã file"</p>
+    
+    <h2>3.5.5. Hệ thống ghi log và lịch sử hoạt động</h2>
+    
+    <p>Để tăng cường tính minh bạch và khả năng audit, hệ thống ghi lại tất cả các hoạt động quan trọng của người dùng vào bảng <code>ActivityHistory</code>. Điều này giúp:</p>
+    
+    <ul>
+        <li><strong>Theo dõi hành vi:</strong> Biết được người dùng đã làm gì, khi nào</li>
+        <li><strong>Phát hiện bất thường:</strong> Nhận biết các hoạt động đáng ngờ</li>
+        <li><strong>Tuân thủ quy định:</strong> Đáp ứng yêu cầu về audit trail trong bảo mật</li>
+        <li><strong>Hỗ trợ debug:</strong> Giúp tìm nguyên nhân khi có vấn đề</li>
+    </ul>
+
+    <h3>3.5.5.1. Các loại hoạt động được ghi log</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%">Action</th>
+                <th style="width: 35%">Khi nào được ghi</th>
+                <th>Ví dụ Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>REGISTER</strong></td>
+                <td>Khi người dùng đăng ký tài khoản mới</td>
+                <td>"Người dùng john_doe đã đăng ký tài khoản."</td>
+            </tr>
+            <tr>
+                <td><strong>LOGIN</strong></td>
+                <td>Khi người dùng đăng nhập thành công</td>
+                <td>"Người dùng john_doe đã đăng nhập."</td>
+            </tr>
+            <tr>
+                <td><strong>GENERATE_KEYS</strong></td>
+                <td>Khi sinh cặp khóa ElGamal</td>
+                <td>"Đã tạo cặp khóa ElGamal (512 bits)."</td>
+            </tr>
+            <tr>
+                <td><strong>ENCRYPT_MESSAGE</strong></td>
+                <td>Khi mã hóa tin nhắn bằng ElGamal</td>
+                <td>"Đã mã hóa tin nhắn bằng ElGamal."</td>
+            </tr>
+            <tr>
+                <td><strong>DECRYPT_MESSAGE</strong></td>
+                <td>Khi giải mã tin nhắn bằng ElGamal</td>
+                <td>"Đã giải mã tin nhắn bằng ElGamal."</td>
+            </tr>
+            <tr>
+                <td><strong>FILE_ENCRYPT</strong></td>
+                <td>Khi mã hóa file bằng AES-256</td>
+                <td>"Đã mã hóa file: document.pdf"</td>
+            </tr>
+            <tr>
+                <td><strong>FILE_DECRYPT</strong></td>
+                <td>Khi giải mã file bằng AES-256</td>
+                <td>"Đã giải mã file: document.pdf.enc"</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>3.5.5.2. Cách ghi log trong code</h3>
+    
+    <p>Mỗi khi có hoạt động quan trọng, hệ thống tạo bản ghi mới trong ActivityHistory:</p>
+    
+    <div class="code-block">
+// Ví dụ: Ghi log khi đăng nhập thành công
+await ActivityHistory.create({
+    userId: user.id,
+    action: 'LOGIN',
+    details: `Người dùng ${username} đã đăng nhập.`
+});
+
+// Ví dụ: Ghi log khi mã hóa file
+await ActivityHistory.create({
+    userId: req.user.id,
+    action: 'FILE_ENCRYPT',
+    details: `Đã mã hóa file: ${req.file.originalname}`
+});
+    </div>
+
+    <p>Thông tin <code>req.user</code> được cung cấp bởi <code>authMiddleware</code>, đảm bảo mọi log đều được gắn với đúng người dùng.</p>
+
+    <h3>3.5.5.3. API lấy lịch sử hoạt động</h3>
+    
+    <p>Người dùng có thể xem lịch sử hoạt động của mình thông qua API:</p>
+    
+    <div class="code-block">
+GET /api/files/history
+
+Headers:
+  Authorization: Bearer {jwt_token}
+
+Response:
+[
+  {
+    "id": 15,
+    "userId": 1,
+    "action": "FILE_ENCRYPT",
+    "details": "Đã mã hóa file: report.docx",
+    "createdAt": "2025-01-21T10:30:45.000Z",
+    "updatedAt": "2025-01-21T10:30:45.000Z"
+  },
+  {
+    "id": 14,
+    "userId": 1,
+    "action": "GENERATE_KEYS",
+    "details": "Đã tạo cặp khóa ElGamal (512 bits).",
+    "createdAt": "2025-01-21T10:25:12.000Z",
+    "updatedAt": "2025-01-21T10:25:12.000Z"
+  },
+  ...
+]
+    </div>
+
+    <p>Dữ liệu được sắp xếp theo thời gian giảm dần (mới nhất trước), chỉ hiển thị lịch sử của người dùng hiện tại.</p>
+
+    <h3>3.5.5.4. Giao diện hiển thị lịch sử</h3>
+    
+    <p>Trên Frontend, tab "Lịch Sử" hiển thị dữ liệu dưới dạng bảng với các cột:</p>
+    
+    <ul>
+        <li><strong>Thời gian:</strong> Hiển thị dạng <code>DD/MM/YYYY HH:mm:ss</code></li>
+        <li><strong>Hành động:</strong> Badge màu sắc theo loại action
+            <ul>
+                <li>Mã hóa (ENCRYPT): Màu xanh brand</li>
+                <li>Giải mã (DECRYPT): Màu xanh lá</li>
+                <li>Khác: Màu xám</li>
+            </ul>
+        </li>
+        <li><strong>Chi tiết:</strong> Mô tả cụ thể về hoạt động</li>
+    </ul>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 3.D: Giao diện tab Lịch Sử</strong><br>
+        <em>Chụp màn hình tab "Lịch Sử" với bảng hiển thị các hoạt động</em>
+    </div>
+
+    <h3>3.5.5.5. Lợi ích của hệ thống lịch sử</h3>
+    
+    <div class="note">
+        <strong>✅ Lợi ích thực tế:</strong>
+        <ul>
+            <li><strong>Truy vết:</strong> Biết chính xác ai đã làm gì, khi nào</li>
+            <li><strong>Phát hiện xâm nhập:</strong> Nếu có hoạt động lạ, người dùng có thể phát hiện ngay</li>
+            <li><strong>Thống kê:</strong> Có thể phân tích hành vi người dùng, tần suất sử dụng các tính năng</li>
+            <li><strong>Tuân thủ:</strong> Đáp ứng yêu cầu về audit log trong các tiêu chuẩn bảo mật như ISO 27001</li>
+            <li><strong>Hỗ trợ người dùng:</strong> Khi có vấn đề, có thể xem lại lịch sử để tìm nguyên nhân</li>
+        </ul>
+    </div>
+
+    <h3>3.5.5.6. Cải tiến trong tương lai</h3>
+    
+    <p>Hệ thống lịch sử có thể được mở rộng với các tính năng:</p>
+    
+    <ul>
+        <li><strong>Lọc và tìm kiếm:</strong> Lọc theo loại action, khoảng thời gian</li>
+        <li><strong>Export:</strong> Xuất lịch sử ra file CSV, PDF</li>
+        <li><strong>Thông báo:</strong> Gửi email khi có hoạt động bất thường</li>
+        <li><strong>Dashboard admin:</strong> Admin xem được lịch sử của tất cả user</li>
+        <li><strong>Retention policy:</strong> Tự động xóa log cũ sau một khoảng thời gian</li>
+        <li><strong>IP tracking:</strong> Ghi lại địa chỉ IP của người dùng</li>
+    </ul>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 6: BỔ SUNG VÀO CHƯƠNG 4 - TRIỂN KHAI -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 6: TRIỂN KHAI CÁC TÍNH NĂNG MỚI</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm vào Chương 4.2 - Triển khai Backend (sau phần 4.2.4)</p>
+    
+    <h2>4.2.5. Triển khai hệ thống xác thực</h2>
+    
+    <h3>4.2.5.1. Cài đặt Model User</h3>
+    
+    <p>Model User được định nghĩa với Sequelize và tích hợp bcrypt để hash mật khẩu tự động:</p>
+    
+    <div class="code-block">
+// File: backend/models/User.js
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const bcrypt = require('bcryptjs');
+
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  role: {
+    type: DataTypes.ENUM('admin', 'user'),
+    defaultValue: 'user',
+  },
+}, {
+  hooks: {
+    // Hash password trước khi tạo user mới
+    beforeCreate: async (user) => {
+      if (user.password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    },
+    // Hash password khi cập nhật
+    beforeUpdate: async (user) => {
+      if (user.changed('password')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    },
+  },
+});
+
+// Method để so sánh password
+User.prototype.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = User;
+    </div>
+
+    <div class="note">
+        <strong>🔑 Giải thích:</strong>
+        <ul>
+            <li><strong>Hooks:</strong> Sequelize hooks cho phép chạy code tự động trước/sau các thao tác database</li>
+            <li><strong>bcrypt.genSalt(10):</strong> Tạo salt với cost factor = 10 (2^10 = 1024 rounds)</li>
+            <li><strong>bcrypt.hash():</strong> Hash password với salt vừa tạo</li>
+            <li><strong>comparePassword():</strong> Method instance để so sánh password khi đăng nhập</li>
+        </ul>
+    </div>
+
+    <h3>4.2.5.2. Cài đặt Controller xác thực</h3>
+    
+    <p>Controller xử lý logic đăng ký và đăng nhập:</p>
+    
+    <div class="code-block">
+// File: backend/controllers/authController.js
+const User = require('../models/User');
+const ActivityHistory = require('../models/ActivityHistory');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+// Đăng ký
+const register = async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    
+    // Tạo user mới (password tự động hash bởi hook)
+    const user = await User.create({ username, password, role });
+    
+    // Ghi log
+    await ActivityHistory.create({
+      userId: user.id,
+      action: 'REGISTER',
+      details: `Người dùng ${username} đã đăng ký tài khoản.`
+    });
+
+    res.status(201).json({ 
+      message: 'Đăng ký thành công', 
+      userId: user.id 
+    });
+  } catch (error) {
+    res.status(400).json({ 
+      error: 'Đăng ký thất bại: ' + error.message 
+    });
+  }
+};
+    </div>
+
+    <div class="code-block">
+// Đăng nhập
+const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    // Tìm user
+    const user = await User.findOne({ where: { username } });
+
+    // Kiểm tra user tồn tại và password đúng
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ 
+        error: 'Tên đăng nhập hoặc mật khẩu không đúng' 
+      });
+    }
+
+    // Tạo JWT token
+    const token = jwt.sign(
+      { id: user.id, role: user.role }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
+
+    // Ghi log
+    await ActivityHistory.create({
+      userId: user.id,
+      action: 'LOGIN',
+      details: `Người dùng ${username} đã đăng nhập.`
+    });
+
+    // Trả về token và thông tin user
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Đăng nhập thất bại: ' + error.message 
+    });
+  }
+};
+
+module.exports = { register, login };
+    </div>
+
+    <h3>4.2.5.3. Cài đặt Routes</h3>
+    
+    <div class="code-block">
+// File: backend/routes/authRoutes.js
+const express = require('express');
+const { register, login } = require('../controllers/authController');
+const router = express.Router();
+
+router.post('/register', register);
+router.post('/login', login);
+
+module.exports = router;
+    </div>
+
+    <h2>4.2.6. Triển khai mã hóa file</h2>
+    
+    <h3>4.2.6.1. Cấu hình Multer</h3>
+    
+    <p>Multer là middleware để xử lý multipart/form-data, dùng cho upload file:</p>
+    
+    <div class="code-block">
+// File: backend/routes/fileRoutes.js
+const express = require('express');
+const multer = require('multer');
+const { encryptFile, decryptFile, getHistory } = require('../controllers/fileController');
+const { authMiddleware } = require('../middleware/authMiddleware');
+const router = express.Router();
+
+// Cấu hình Multer lưu file vào thư mục uploads/
+const upload = multer({ dest: 'uploads/' });
+
+// Routes với middleware
+router.post('/encrypt', authMiddleware, upload.single('file'), encryptFile);
+router.post('/decrypt', authMiddleware, upload.single('file'), decryptFile);
+router.get('/history', authMiddleware, getHistory);
+
+module.exports = router;
+    </div>
+
+    <div class="note">
+        <strong>📝 Giải thích:</strong>
+        <ul>
+            <li><strong>upload.single('file'):</strong> Xử lý 1 file với field name là 'file'</li>
+            <li><strong>dest: 'uploads/':</strong> Lưu file vào thư mục uploads/ với tên ngẫu nhiên</li>
+            <li><strong>authMiddleware:</strong> Đảm bảo chỉ user đã đăng nhập mới upload được</li>
+        </ul>
+    </div>
+
+    <h3>4.2.6.2. Controller mã hóa file</h3>
+    
+    <p>Phần quan trọng nhất của controller:</p>
+    
+    <div class="code-block">
+// File: backend/controllers/fileController.js (phần mã hóa)
+const crypto = require('crypto');
+const fs = require('fs');
+
+const ALGORITHM = 'aes-256-cbc';
+const KEY_LENGTH = 32;  // 256 bits
+const IV_LENGTH = 16;   // 128 bits
+
+const encryptFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Không có file được tải lên' });
+    }
+
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: 'Cần mật khẩu để mã hóa' });
+    }
+
+    // Tạo khóa từ password
+    const key = crypto.scryptSync(password, 'salt', KEY_LENGTH);
+    const iv = crypto.randomBytes(IV_LENGTH);
+
+    const inputPath = req.file.path;
+    const outputPath = inputPath + '.enc';
+
+    // Tạo cipher stream
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+    const input = fs.createReadStream(inputPath);
+    const output = fs.createWriteStream(outputPath);
+
+    // Ghi IV vào đầu file
+    output.write(iv);
+
+    // Pipe data qua cipher
+    input.pipe(cipher).pipe(output);
+
+    output.on('finish', async () => {
+      // Ghi log
+      await ActivityHistory.create({
+        userId: req.user.id,
+        action: 'FILE_ENCRYPT',
+        details: `Đã mã hóa file: ${req.file.originalname}`
+      });
+
+      // Download file về client
+      res.download(outputPath, req.file.originalname + '.enc', (err) => {
+        // Xóa file tạm
+        fs.unlinkSync(inputPath);
+        fs.unlinkSync(outputPath);
+      });
+    });
+
+  } catch (error) {
+    console.error('Encryption error:', error);
+    res.status(500).json({ 
+      error: 'Mã hóa file thất bại: ' + error.message 
+    });
+  }
+};
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 7: BỔ SUNG VÀO CHƯƠNG 4.3 - FRONTEND -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 7: TRIỂN KHAI FRONTEND</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm vào Chương 4.3 - Triển khai Frontend (sau phần 4.3.4)</p>
+    
+    <h2>4.3.5. Triển khai giao diện đăng nhập/đăng ký</h2>
+    
+    <h3>4.3.5.1. State management cho authentication</h3>
+    
+    <p>Trong component App.jsx, các state sau được sử dụng để quản lý authentication:</p>
+    
+    <div class="code-block">
+// State cho authentication
+const [isLoggedIn, setIsLoggedIn] = useState(false);
+const [currentUser, setCurrentUser] = useState(null);
+const [token, setToken] = useState(localStorage.getItem('token'));
+
+// State cho form đăng nhập/đăng ký
+const [authMode, setAuthMode] = useState('login'); // 'login' hoặc 'register'
+const [username, setUsername] = useState('');
+const [password, setPassword] = useState('');
+const [passwordStrength, setPasswordStrength] = useState({ 
+  score: 0, 
+  label: '', 
+  color: '' 
+});
+    </div>
+
+    <h3>4.3.5.2. Axios Interceptor</h3>
+    
+    <p>Tự động gắn JWT token vào mọi request:</p>
+    
+    <div class="code-block">
+useEffect(() => {
+  if (token) {
+    // Lưu token vào localStorage
+    localStorage.setItem('token', token);
+    
+    // Gắn token vào header mặc định của Axios
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    setIsLoggedIn(true);
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) setCurrentUser(user);
+  } else {
+    // Xóa token
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+    
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+  }
+}, [token]);
+    </div>
+
+    <h3>4.3.5.3. Kiểm tra độ mạnh mật khẩu</h3>
+    
+    <p>Hàm kiểm tra độ mạnh mật khẩu realtime khi người dùng nhập:</p>
+    
+    <div class="code-block">
+const checkPasswordStrength = (pass) => {
+  let score = 0;
+  if (!pass) return { score: 0, label: '', color: '' };
+  
+  // Các tiêu chí đánh giá
+  if (pass.length >= 8) score++;           // Độ dài >= 8
+  if (/[A-Z]/.test(pass)) score++;         // Có chữ hoa
+  if (/[a-z]/.test(pass)) score++;         // Có chữ thường
+  if (/[0-9]/.test(pass)) score++;         // Có số
+  if (/[^A-Za-z0-9]/.test(pass)) score++;  // Có ký tự đặc biệt
+
+  const strengths = [
+    { label: 'Rất yếu', color: 'bg-red-500' },
+    { label: 'Yếu', color: 'bg-orange-500' },
+    { label: 'Trung bình', color: 'bg-yellow-500' },
+    { label: 'Mạnh', color: 'bg-green-500' },
+    { label: 'Rất mạnh', color: 'bg-emerald-500' }
+  ];
+
+  const result = score > 0 ? strengths[Math.min(score - 1, 4)] : strengths[0];
+  return { score, ...result };
+};
+
+const handlePasswordChange = (e) => {
+  const val = e.target.value;
+  setPassword(val);
+  setPasswordStrength(checkPasswordStrength(val));
+};
+    </div>
+
+    <h3>4.3.5.4. Giao diện hiển thị độ mạnh mật khẩu</h3>
+    
+    <div class="code-block">
+{authMode === 'register' && password && (
+  &lt;div className="mt-2 space-y-2"&gt;
+    &lt;div className="flex justify-between items-center"&gt;
+      &lt;span className="text-xs text-slate-500"&gt;Độ mạnh:&lt;/span&gt;
+      &lt;span className={`text-xs font-bold ${passwordStrength.color.replace('bg-', 'text-')}`}&gt;
+        {passwordStrength.label}
+      &lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div className="flex gap-1 h-1"&gt;
+      {[1, 2, 3, 4, 5].map((level) => (
+        &lt;div
+          key={level}
+          className={`h-full flex-1 rounded-full ${
+            level <= passwordStrength.score 
+              ? passwordStrength.color 
+              : 'bg-white/5'
+          }`}
+        /&gt;
+      ))}
+    &lt;/div&gt;
+  &lt;/div&gt;
+)}
+    </div>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 4.X: Giao diện đăng ký với password strength indicator</strong><br>
+        <em>Chụp màn hình form đăng ký với thanh hiển thị độ mạnh mật khẩu</em>
+    </div>
+
+    <h2>4.3.6. Triển khai giao diện mã hóa file</h2>
+    
+    <h3>4.3.6.1. State cho file upload</h3>
+    
+    <div class="code-block">
+const [selectedFile, setSelectedFile] = useState(null);
+const [filePassword, setFilePassword] = useState('');
+const [isProcessingFile, setIsProcessingFile] = useState(false);
+    </div>
+
+    <h3>4.3.6.2. Xử lý upload file</h3>
+    
+    <div class="code-block">
+const handleFileAction = async (action) => {
+  if (!selectedFile || !filePassword) {
+    toast.error('Vui lòng chọn file và nhập mật khẩu');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+  formData.append('password', filePassword);
+
+  setIsProcessingFile(true);
+  try {
+    const res = await axios.post(
+      `${API_BASE}/files/${action}`, 
+      formData, 
+      { responseType: 'blob' }  // Quan trọng: nhận file binary
+    );
+    
+    // Tạo URL để download
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 
+      action === 'encrypt' 
+        ? `${selectedFile.name}.enc` 
+        : selectedFile.name.replace('.enc', '')
+    );
+    document.body.appendChild(link);
+    link.click();
+    
+    toast.success(`${action === 'encrypt' ? 'Mã hóa' : 'Giải mã'} file thành công`);
+  } catch (err) {
+    // Xử lý lỗi từ blob response
+    if (err.response?.data instanceof Blob) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const errorData = JSON.parse(reader.result);
+        toast.error(errorData.error || 'Thao tác thất bại');
+      };
+      reader.readAsText(err.response.data);
+    } else {
+      toast.error(err.response?.data?.error || 'Thao tác thất bại');
+    }
+  } finally {
+    setIsProcessingFile(false);
+  }
+};
+    </div>
+
+    <h3>4.3.6.3. Giao diện drag & drop</h3>
+    
+    <div class="code-block">
+&lt;div 
+  className={`border-2 border-dashed rounded-3xl p-12 text-center ${
+    selectedFile ? 'border-brand-500 bg-brand-500/5' : 'border-white/10'
+  }`}
+  onDragOver={(e) => e.preventDefault()}
+  onDrop={(e) => {
+    e.preventDefault();
+    setSelectedFile(e.dataTransfer.files[0]);
+  }}
+&gt;
+  &lt;input 
+    type="file" 
+    id="file-upload" 
+    className="hidden" 
+    onChange={(e) => setSelectedFile(e.target.files[0])}
+  /&gt;
+  &lt;label htmlFor="file-upload" className="cursor-pointer"&gt;
+    {selectedFile ? (
+      &lt;&gt;
+        &lt;CheckCircle2 className="text-green-500" size={48} /&gt;
+        &lt;p className="text-white font-bold"&gt;{selectedFile.name}&lt;/p&gt;
+        &lt;p className="text-slate-500 text-xs"&gt;
+          {(selectedFile.size / 1024).toFixed(2)} KB
+        &lt;/p&gt;
+      &lt;/&gt;
+    ) : (
+      &lt;&gt;
+        &lt;Upload className="text-slate-500" size={48} /&gt;
+        &lt;p className="text-slate-300"&gt;Kéo thả hoặc nhấn để chọn file&lt;/p&gt;
+      &lt;/&gt;
+    )}
+  &lt;/label&gt;
+&lt;/div&gt;
+    </div>
+
+    <div class="image-placeholder">
+        <strong>📊 Hình 4.Y: Giao diện tab File với drag & drop</strong><br>
+        <em>Chụp màn hình tab "File" với khu vực drag & drop và các nút mã hóa/giải mã</em>
+    </div>
+
+    <h2>4.3.7. Triển khai giao diện lịch sử</h2>
+    
+    <h3>4.3.7.1. Fetch dữ liệu lịch sử</h3>
+    
+    <div class="code-block">
+const [history, setHistory] = useState([]);
+const [loadingHistory, setLoadingHistory] = useState(false);
+
+const fetchHistory = async () => {
+  setLoadingHistory(true);
+  try {
+    const res = await axios.get(`${API_BASE}/files/history`);
+    setHistory(res.data);
+  } catch (err) {
+    toast.error('Không thể lấy lịch sử');
+  } finally {
+    setLoadingHistory(false);
+  }
+};
+
+// Tự động fetch khi chuyển sang tab lịch sử
+useEffect(() => {
+  if (activeTab === 'lich-su' && isLoggedIn) {
+    fetchHistory();
+  }
+}, [activeTab, isLoggedIn]);
+    </div>
+
+    <h3>4.3.7.2. Hiển thị bảng lịch sử</h3>
+    
+    <div class="code-block">
+&lt;table className="w-full"&gt;
+  &lt;thead&gt;
+    &lt;tr className="border-b border-white/5"&gt;
+      &lt;th&gt;Thời gian&lt;/th&gt;
+      &lt;th&gt;Hành động&lt;/th&gt;
+      &lt;th&gt;Chi tiết&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    {loadingHistory ? (
+      &lt;tr&gt;
+        &lt;td colSpan="3" className="text-center"&gt;
+          &lt;RefreshCw className="animate-spin" /&gt;
+          Đang tải...
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    ) : history.length === 0 ? (
+      &lt;tr&gt;
+        &lt;td colSpan="3" className="text-center"&gt;
+          Chưa có hoạt động nào
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    ) : (
+      history.map((item) => (
+        &lt;tr key={item.id}&gt;
+          &lt;td&gt;{new Date(item.createdAt).toLocaleString()}&lt;/td&gt;
+          &lt;td&gt;
+            &lt;span className={`badge ${
+              item.action.includes('ENCRYPT') ? 'badge-blue' : 
+              item.action.includes('DECRYPT') ? 'badge-green' :
+              'badge-gray'
+            }`}&gt;
+              {item.action}
+            &lt;/span&gt;
+          &lt;/td&gt;
+          &lt;td&gt;{item.details}&lt;/td&gt;
+        &lt;/tr&gt;
+      ))
+    )}
+  &lt;/tbody&gt;
+&lt;/table&gt;
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 8: BỔ SUNG VÀO CHƯƠNG 5 - KIỂM THỬ -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 8: KIỂM THỬ CÁC TÍNH NĂNG MỚI</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm vào Chương 5.2 - Kiểm thử chức năng (sau phần 5.2.3)</p>
+    
+    <h2>5.2.4. Kiểm thử chức năng xác thực</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%">Test Case</th>
+                <th style="width: 30%">Mô tả</th>
+                <th style="width: 25%">Input</th>
+                <th style="width: 15%">Kết quả</th>
+                <th style="width: 15%">Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>TC-AUTH-01</strong></td>
+                <td>Đăng ký với thông tin hợp lệ</td>
+                <td>username: "testuser"<br>password: "Test@123"</td>
+                <td>✓ Thành công</td>
+                <td>User được tạo, password được hash</td>
+            </tr>
+            <tr>
+                <td><strong>TC-AUTH-02</strong></td>
+                <td>Đăng ký với username đã tồn tại</td>
+                <td>username: "testuser" (trùng)</td>
+                <td>✓ Lỗi hợp lý</td>
+                <td>Hiển thị "Username đã tồn tại"</td>
+            </tr>
+            <tr>
+                <td><strong>TC-AUTH-03</strong></td>
+                <td>Đăng nhập với thông tin đúng</td>
+                <td>username: "testuser"<br>password: "Test@123"</td>
+                <td>✓ Thành công</td>
+                <td>Nhận được JWT token</td>
+            </tr>
+            <tr>
+                <td><strong>TC-AUTH-04</strong></td>
+                <td>Đăng nhập với password sai</td>
+                <td>password: "WrongPass"</td>
+                <td>✓ Lỗi hợp lý</td>
+                <td>Hiển thị "Mật khẩu không đúng"</td>
+            </tr>
+            <tr>
+                <td><strong>TC-AUTH-05</strong></td>
+                <td>Truy cập API không có token</td>
+                <td>GET /api/files/history<br>(không có header Authorization)</td>
+                <td>✓ Lỗi 401</td>
+                <td>"Không có token"</td>
+            </tr>
+            <tr>
+                <td><strong>TC-AUTH-06</strong></td>
+                <td>Truy cập API với token không hợp lệ</td>
+                <td>Token: "invalid_token_xyz"</td>
+                <td>✓ Lỗi 401</td>
+                <td>"Token không hợp lệ"</td>
+            </tr>
+            <tr>
+                <td><strong>TC-AUTH-07</strong></td>
+                <td>Kiểm tra độ mạnh mật khẩu</td>
+                <td>password: "abc" → "Abc1" → "Abc@123"</td>
+                <td>✓ Thành công</td>
+                <td>Thanh độ mạnh thay đổi từ đỏ → vàng → xanh</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>5.2.5. Kiểm thử mã hóa file</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%">Test Case</th>
+                <th style="width: 30%">Mô tả</th>
+                <th style="width: 25%">Input</th>
+                <th style="width: 15%">Kết quả</th>
+                <th style="width: 15%">Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>TC-FILE-01</strong></td>
+                <td>Mã hóa file text nhỏ</td>
+                <td>File: test.txt (1KB)<br>Password: "pass123"</td>
+                <td>✓ Thành công</td>
+                <td>Nhận được test.txt.enc</td>
+            </tr>
+            <tr>
+                <td><strong>TC-FILE-02</strong></td>
+                <td>Giải mã file với password đúng</td>
+                <td>File: test.txt.enc<br>Password: "pass123"</td>
+                <td>✓ Thành công</td>
+                <td>File gốc được khôi phục chính xác</td>
+            </tr>
+            <tr>
+                <td><strong>TC-FILE-03</strong></td>
+                <td>Giải mã file với password sai</td>
+                <td>Password: "wrongpass"</td>
+                <td>✓ Lỗi hợp lý</td>
+                <td>"Giải mã thất bại. Mật khẩu sai"</td>
+            </tr>
+            <tr>
+                <td><strong>TC-FILE-04</strong></td>
+                <td>Mã hóa file PDF</td>
+                <td>File: document.pdf (500KB)</td>
+                <td>✓ Thành công</td>
+                <td>Mã hóa thành công, file mở được sau giải mã</td>
+            </tr>
+            <tr>
+                <td><strong>TC-FILE-05</strong></td>
+                <td>Mã hóa file hình ảnh</td>
+                <td>File: photo.jpg (2MB)</td>
+                <td>✓ Thành công</td>
+                <td>Hình ảnh hiển thị đúng sau giải mã</td>
+            </tr>
+            <tr>
+                <td><strong>TC-FILE-06</strong></td>
+                <td>Mã hóa file lớn</td>
+                <td>File: video.mp4 (50MB)</td>
+                <td>✓ Thành công</td>
+                <td>Thời gian xử lý: ~5-10 giây</td>
+            </tr>
+            <tr>
+                <td><strong>TC-FILE-07</strong></td>
+                <td>Upload không chọn file</td>
+                <td>Không chọn file, chỉ nhập password</td>
+                <td>✓ Lỗi hợp lý</td>
+                <td>"Vui lòng chọn file"</td>
+            </tr>
+            <tr>
+                <td><strong>TC-FILE-08</strong></td>
+                <td>Upload không nhập password</td>
+                <td>Chọn file, không nhập password</td>
+                <td>✓ Lỗi hợp lý</td>
+                <td>"Vui lòng nhập mật khẩu"</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>5.2.6. Kiểm thử lịch sử hoạt động</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%">Test Case</th>
+                <th style="width: 30%">Mô tả</th>
+                <th style="width: 25%">Input</th>
+                <th style="width: 15%">Kết quả</th>
+                <th style="width: 15%">Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>TC-HIST-01</strong></td>
+                <td>Xem lịch sử sau đăng nhập</td>
+                <td>Chuyển sang tab "Lịch Sử"</td>
+                <td>✓ Thành công</td>
+                <td>Hiển thị danh sách hoạt động</td>
+            </tr>
+            <tr>
+                <td><strong>TC-HIST-02</strong></td>
+                <td>Kiểm tra log đăng ký</td>
+                <td>Sau khi đăng ký tài khoản mới</td>
+                <td>✓ Thành công</td>
+                <td>Có bản ghi "REGISTER" trong lịch sử</td>
+            </tr>
+            <tr>
+                <td><strong>TC-HIST-03</strong></td>
+                <td>Kiểm tra log mã hóa file</td>
+                <td>Sau khi mã hóa file "test.pdf"</td>
+                <td>✓ Thành công</td>
+                <td>Có bản ghi "FILE_ENCRYPT" với details chứa tên file</td>
+            </tr>
+            <tr>
+                <td><strong>TC-HIST-04</strong></td>
+                <td>Kiểm tra thứ tự sắp xếp</td>
+                <td>Thực hiện nhiều hoạt động</td>
+                <td>✓ Thành công</td>
+                <td>Hoạt động mới nhất hiển thị đầu tiên</td>
+            </tr>
+            <tr>
+                <td><strong>TC-HIST-05</strong></td>
+                <td>Kiểm tra phân quyền</td>
+                <td>User A xem lịch sử</td>
+                <td>✓ Thành công</td>
+                <td>Chỉ thấy hoạt động của chính mình, không thấy của user B</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>5.2.7. Tổng hợp kết quả kiểm thử</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30%">Nhóm chức năng</th>
+                <th style="width: 20%">Số test case</th>
+                <th style="width: 20%">Passed</th>
+                <th style="width: 20%">Failed</th>
+                <th style="width: 10%">Tỷ lệ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Xác thực (Authentication)</td>
+                <td style="text-align: center">7</td>
+                <td style="text-align: center; color: green">7</td>
+                <td style="text-align: center">0</td>
+                <td style="text-align: center"><strong>100%</strong></td>
+            </tr>
+            <tr>
+                <td>Mã hóa file (File Encryption)</td>
+                <td style="text-align: center">8</td>
+                <td style="text-align: center; color: green">8</td>
+                <td style="text-align: center">0</td>
+                <td style="text-align: center"><strong>100%</strong></td>
+            </tr>
+            <tr>
+                <td>Lịch sử hoạt động (History)</td>
+                <td style="text-align: center">5</td>
+                <td style="text-align: center; color: green">5</td>
+                <td style="text-align: center">0</td>
+                <td style="text-align: center"><strong>100%</strong></td>
+            </tr>
+            <tr style="background: #f0f9ff; font-weight: bold">
+                <td>TỔNG CỘNG</td>
+                <td style="text-align: center">20</td>
+                <td style="text-align: center; color: green">20</td>
+                <td style="text-align: center">0</td>
+                <td style="text-align: center"><strong>100%</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 9: CẬP NHẬT DANH MỤC HÌNH ẢNH VÀ BẢNG BIỂU -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 9: CẬP NHẬT DANH MỤC HÌNH ẢNH</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm vào phần "DANH MỤC HÌNH ẢNH" (sau các hình đã có)</p>
+    
+    <h2>Danh mục hình ảnh bổ sung</h2>
+    
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Hình 3.X:</strong> Sơ đồ ERD (Entity Relationship Diagram) - Quan hệ giữa bảng Users và ActivityHistory</p>
+        <p><strong>Hình 3.Y:</strong> Sơ đồ tuần tự - Quy trình đăng ký tài khoản</p>
+        <p><strong>Hình 3.Z:</strong> Sơ đồ tuần tự - Quy trình đăng nhập và cấp JWT token</p>
+        <p><strong>Hình 3.A:</strong> Sơ đồ hoạt động của AES-256-CBC</p>
+        <p><strong>Hình 3.B:</strong> Sơ đồ luồng mã hóa file</p>
+        <p><strong>Hình 3.C:</strong> Sơ đồ luồng giải mã file</p>
+        <p><strong>Hình 3.D:</strong> Giao diện tab Lịch Sử với bảng hiển thị hoạt động</p>
+        <p><strong>Hình 4.X:</strong> Giao diện đăng ký với password strength indicator</p>
+        <p><strong>Hình 4.Y:</strong> Giao diện tab File với drag & drop</p>
+        <p><strong>Hình 5.X:</strong> Giao diện đăng nhập thực tế</p>
+        <p><strong>Hình 5.Y:</strong> Giao diện tab File đang mã hóa (loading state)</p>
+        <p><strong>Hình 5.Z:</strong> Giao diện tab Lịch Sử với dữ liệu thực tế</p>
+    </div>
+
+    <h2>Danh mục bảng biểu bổ sung</h2>
+    
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Bảng 3.X:</strong> Cấu trúc bảng Users</p>
+        <p><strong>Bảng 3.Y:</strong> Cấu trúc bảng ActivityHistory</p>
+        <p><strong>Bảng 3.Z:</strong> Bảng phân quyền chức năng theo vai trò</p>
+        <p><strong>Bảng 4.X:</strong> Các thư viện bổ sung cho Backend</p>
+        <p><strong>Bảng 5.X:</strong> Kết quả kiểm thử chức năng xác thực</p>
+        <p><strong>Bảng 5.Y:</strong> Kết quả kiểm thử mã hóa file</p>
+        <p><strong>Bảng 5.Z:</strong> Kết quả kiểm thử lịch sử hoạt động</p>
+        <p><strong>Bảng 5.T:</strong> Tổng hợp kết quả kiểm thử tất cả tính năng</p>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 10: CẬP NHẬT DANH MỤC TỪ VIẾT TẮT -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 10: CẬP NHẬT DANH MỤC TỪ VIẾT TẮT</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm vào phần "DANH MỤC TỪ VIẾT TẮT" (sau các từ đã có)</p>
+    
+    <h2>Từ viết tắt bổ sung</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%">Từ viết tắt</th>
+                <th>Nghĩa đầy đủ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>AES</strong></td>
+                <td>Advanced Encryption Standard - Chuẩn mã hóa tiên tiến</td>
+            </tr>
+            <tr>
+                <td><strong>CBC</strong></td>
+                <td>Cipher Block Chaining - Chuỗi khối mã hóa</td>
+            </tr>
+            <tr>
+                <td><strong>JWT</strong></td>
+                <td>JSON Web Token - Token web JSON</td>
+            </tr>
+            <tr>
+                <td><strong>ORM</strong></td>
+                <td>Object-Relational Mapping - Ánh xạ quan hệ đối tượng</td>
+            </tr>
+            <tr>
+                <td><strong>RBAC</strong></td>
+                <td>Role-Based Access Control - Kiểm soát truy cập dựa trên vai trò</td>
+            </tr>
+            <tr>
+                <td><strong>IV</strong></td>
+                <td>Initialization Vector - Vector khởi tạo</td>
+            </tr>
+            <tr>
+                <td><strong>KDF</strong></td>
+                <td>Key Derivation Function - Hàm dẫn xuất khóa</td>
+            </tr>
+            <tr>
+                <td><strong>CRUD</strong></td>
+                <td>Create, Read, Update, Delete - Tạo, Đọc, Cập nhật, Xóa</td>
+            </tr>
+            <tr>
+                <td><strong>ERD</strong></td>
+                <td>Entity Relationship Diagram - Sơ đồ quan hệ thực thể</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 11: CẬP NHẬT KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN -->
+<!-- ============================================ -->
+
+<div class="section">
+    <h1>PHẦN BỔ SUNG 11: CẬP NHẬT KẾT LUẬN</h1>
+    <p><strong>Vị trí chèn:</strong> Thêm vào phần "KẾT LUẬN" (trước đoạn cuối)</p>
+    
+    <h2>Bổ sung vào Kết luận</h2>
+    
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
+        <p><strong>Về các tính năng mở rộng:</strong> Ngoài việc triển khai thành công thuật toán ElGamal, đồ án còn được mở rộng với nhiều tính năng thực tế quan trọng:</p>
+        
+        <ul>
+            <li><strong>Hệ thống xác thực và phân quyền:</strong> Triển khai đầy đủ chức năng đăng ký, đăng nhập với JWT authentication và phân quyền user/admin. Mật khẩu được bảo vệ bằng bcrypt hash, đảm bảo an toàn ngay cả khi database bị xâm nhập.</li>
+            
+            <li><strong>Cơ sở dữ liệu MySQL:</strong> Sử dụng Sequelize ORM để quản lý database với 2 bảng chính (Users và ActivityHistory), thiết lập quan hệ và ràng buộc dữ liệu hợp lý.</li>
+            
+            <li><strong>Mã hóa file với AES-256-CBC:</strong> Bổ sung khả năng mã hóa file bất kỳ (không chỉ văn bản) sử dụng thuật toán AES-256-CBC - chuẩn mã hóa đối xứng mạnh mẽ. Điều này giải quyết được hạn chế của ElGamal khi xử lý dữ liệu lớn.</li>
+            
+            <li><strong>Hệ thống lịch sử hoạt động:</strong> Ghi lại đầy đủ các hoạt động của người dùng, phục vụ mục đích audit và tuân thủ các tiêu chuẩn bảo mật. Mỗi user chỉ xem được lịch sử của chính mình, đảm bảo quyền riêng tư.</li>
+            
+            <li><strong>Giao diện người dùng hoàn chỉnh:</strong> Thiết kế giao diện hiện đại với dark theme, hỗ trợ drag & drop upload file, hiển thị độ mạnh mật khẩu realtime, và nhiều tính năng UX khác giúp trải nghiệm người dùng mượt mà.</li>
+        </ul>
+        
+        <p>Những tính năng mở rộng này không chỉ làm tăng giá trị thực tiễn của đồ án mà còn thể hiện khả năng tích hợp nhiều công nghệ và kỹ thuật bảo mật khác nhau vào một hệ thống hoàn chỉnh. Hệ thống không còn chỉ là công cụ minh họa thuật toán mà đã trở thành một ứng dụng bảo mật thực tế có thể sử dụng được.</p>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PHẦN 12: HƯỚNG DẪN SỬ DỤNG FILE HTML -->
+<!-- ============================================ -->
+
+<div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h1 style="color: white; border-bottom-color: white;">📋 HƯỚNG DẪN SỬ DỤNG FILE NÀY</h1>
+    
+    <h2 style="color: white;">Cách 1: Copy trực tiếp vào Word</h2>
+    <ol style="font-size: 16px; line-height: 1.8;">
+        <li>Mở file <strong>bao_cao_bo_sung.html</strong> bằng trình duyệt (Chrome, Firefox, Edge...)</li>
+        <li>Tìm phần bổ sung bạn cần (ví dụ: PHẦN BỔ SUNG 1, 2, 3...)</li>
+        <li>Bôi đen toàn bộ nội dung phần đó (kể cả bảng, code, hình ảnh placeholder)</li>
+        <li>Nhấn <strong>Ctrl+C</strong> để copy</li>
+        <li>Mở file Word báo cáo của bạn</li>
+        <li>Đặt con trỏ vào vị trí cần chèn (theo hướng dẫn "Vị trí chèn" ở đầu mỗi phần)</li>
+        <li>Nhấn <strong>Ctrl+V</strong> để paste</li>
+        <li>Word sẽ tự động giữ nguyên format, bảng, màu sắc</li>
+    </ol>
+
+    <h2 style="color: white;">Cách 2: Chỉnh sửa trong Word</h2>
+    <ol style="font-size: 16px; line-height: 1.8;">
+        <li>Sau khi paste vào Word, bạn có thể:
+            <ul>
+                <li>Thay đổi font chữ cho phù hợp với báo cáo (khuyến nghị: Times New Roman, 13pt)</li>
+                <li>Điều chỉnh màu sắc nếu cần</li>
+                <li>Thay thế các placeholder hình ảnh bằng ảnh chụp màn hình thực tế</li>
+                <li>Cập nhật số thứ tự hình/bảng cho khớp với báo cáo</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h2 style="color: white;">Cách 3: Chụp màn hình cần thiết</h2>
+    <p style="font-size: 16px;">Các hình ảnh cần chụp (đã đánh dấu trong file):</p>
+    <ul style="font-size: 16px; line-height: 1.8;">
+        <li>✅ Sơ đồ ERD database (vẽ bằng draw.io hoặc MySQL Workbench)</li>
+        <li>✅ Sơ đồ tuần tự đăng ký/đăng nhập (vẽ bằng draw.io)</li>
+        <li>✅ Sơ đồ AES-256-CBC (tìm trên Google Images hoặc vẽ)</li>
+        <li>✅ Giao diện đăng nhập/đăng ký với password strength</li>
+        <li>✅ Giao diện tab File với drag & drop</li>
+        <li>✅ Giao diện tab Lịch Sử với dữ liệu</li>
+    </ul>
+
+    <h2 style="color: white;">Lưu ý quan trọng</h2>
+    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <ul style="font-size: 16px; line-height: 1.8;">
+            <li>⚠️ Đọc kỹ phần "Vị trí chèn" ở đầu mỗi phần để biết chèn vào đâu</li>
+            <li>⚠️ Cập nhật số thứ tự hình/bảng cho khớp với báo cáo hiện tại</li>
+            <li>⚠️ Thay thế placeholder hình ảnh bằng ảnh thật</li>
+            <li>⚠️ Kiểm tra lại format sau khi paste vào Word</li>
+            <li>⚠️ Đảm bảo các tham chiếu (Hình X.Y, Bảng X.Y) đúng</li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,719 @@
+================================================================================
+BỔ SUNG VÀO BÁO CÁO ĐỒ ÁN - HỆ THỐNG MÃ HÓA ELGAMAL
+Format chuẩn đại học Việt Nam - Times New Roman 13pt
+================================================================================
+
+[HƯỚNG DẪN SỬ DỤNG]
+- Copy từng phần dưới đây vào Word
+- Định dạng: Times New Roman, 13pt, dãn dòng 1.5
+- Lề: Trái 3cm, Phải 2cm, Trên/Dưới 2cm
+- Căn đều 2 bên (Justify)
+- Thụt đầu dòng 1cm
+
+================================================================================
+PHẦN 1: BỔ SUNG VÀO CHƯƠNG 3.1.1 - YÊU CẦU CHỨC NĂNG
+Vị trí: Sau bảng yêu cầu YC-10
+================================================================================
+
+	Ngoài các yêu cầu chức năng cơ bản đã nêu, hệ thống còn được bổ sung các chức năng quan trọng nhằm nâng cao tính bảo mật, khả năng quản lý và trải nghiệm người dùng. Các yêu cầu bổ sung được trình bày trong Bảng 3.2 dưới đây.
+
+Bảng 3.2: Yêu cầu chức năng bổ sung
+
+┌────────┬──────────────────────┬────────────────────────────────────────────┐
+│ Mã YC  │ Yêu cầu              │ Mô tả chi tiết                             │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-11  │ Đăng ký tài khoản    │ Cho phép người dùng tạo tài khoản mới với │
+│        │                      │ username và password. Mật khẩu được hash   │
+│        │                      │ bằng bcrypt với salt rounds = 10 trước khi │
+│        │                      │ lưu vào cơ sở dữ liệu                      │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-12  │ Đăng nhập hệ thống   │ Xác thực người dùng bằng username và       │
+│        │                      │ password, cấp JWT token với thời gian sống │
+│        │                      │ 24 giờ để truy cập các chức năng được bảo  │
+│        │                      │ vệ                                         │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-13  │ Phân quyền người     │ Hệ thống hỗ trợ 2 vai trò: user (người     │
+│        │ dùng                 │ dùng thường) và admin (quản trị viên) với  │
+│        │                      │ các quyền truy cập khác nhau               │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-14  │ Mã hóa file          │ Cho phép người dùng upload và mã hóa file  │
+│        │                      │ bất kỳ sử dụng thuật toán AES-256-CBC với  │
+│        │                      │ password do người dùng cung cấp            │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-15  │ Giải mã file         │ Cho phép người dùng upload file đã mã hóa  │
+│        │                      │ (.enc) và giải mã bằng password đúng để    │
+│        │                      │ khôi phục file gốc                         │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-16  │ Lịch sử hoạt động    │ Ghi lại và hiển thị tất cả các hoạt động   │
+│        │                      │ của người dùng: đăng ký, đăng nhập, sinh   │
+│        │                      │ khóa, mã hóa/giải mã tin nhắn và file      │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-17  │ Đăng xuất            │ Cho phép người dùng đăng xuất khỏi hệ      │
+│        │                      │ thống và xóa token xác thực                │
+├────────┼──────────────────────┼────────────────────────────────────────────┤
+│ YC-18  │ Kiểm tra độ mạnh     │ Hiển thị realtime độ mạnh mật khẩu khi     │
+│        │ mật khẩu             │ đăng ký dựa trên 5 tiêu chí: độ dài, chữ  │
+│        │                      │ hoa, chữ thường, số, ký tự đặc biệt        │
+└────────┴──────────────────────┴────────────────────────────────────────────┘
+
+Ghi chú: Các chức năng YC-11 đến YC-18 là những tính năng mới được bổ sung để nâng cao tính bảo mật và trải nghiệm người dùng của hệ thống.
+
+
+
+================================================================================
+PHẦN 2: BỔ SUNG MỤC MỚI 3.2.4 - THIẾT KẾ CƠ SỞ DỮ LIỆU
+Vị trí: Sau mục 3.2.3. Luồng dữ liệu trong hệ thống
+================================================================================
+
+3.2.4. Thiết kế cơ sở dữ liệu
+
+	Hệ thống sử dụng MySQL làm hệ quản trị cơ sở dữ liệu và Sequelize ORM để tương tác với database. Cơ sở dữ liệu được thiết kế với 2 bảng chính nhằm lưu trữ thông tin người dùng và ghi lại lịch sử hoạt động của họ trong hệ thống.
+
+3.2.4.1. Bảng Users (Người dùng)
+
+	Bảng Users lưu trữ thông tin tài khoản người dùng của hệ thống. Cấu trúc bảng được mô tả trong Bảng 3.3.
+
+Bảng 3.3: Cấu trúc bảng Users
+
+┌──────────────┬──────────────────┬─────────────────────┬────────────────────┐
+│ Tên trường   │ Kiểu dữ liệu     │ Ràng buộc           │ Mô tả              │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ id           │ INTEGER          │ PRIMARY KEY,        │ Mã định danh duy   │
+│              │                  │ AUTO_INCREMENT      │ nhất của người     │
+│              │                  │                     │ dùng               │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ username     │ STRING           │ NOT NULL, UNIQUE    │ Tên đăng nhập,     │
+│              │                  │                     │ không được trùng   │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ password     │ STRING           │ NOT NULL            │ Mật khẩu đã được   │
+│              │                  │                     │ hash bằng bcrypt   │
+│              │                  │                     │ (salt rounds = 10) │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ role         │ ENUM('admin',    │ DEFAULT 'user'      │ Vai trò: admin     │
+│              │ 'user')          │                     │ hoặc user          │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ createdAt    │ DATETIME         │ AUTO                │ Thời gian tạo tài  │
+│              │                  │                     │ khoản              │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ updatedAt    │ DATETIME         │ AUTO                │ Thời gian cập nhật │
+│              │                  │                     │ lần cuối           │
+└──────────────┴──────────────────┴─────────────────────┴────────────────────┘
+
+	Mật khẩu không được lưu dưới dạng plain text. Trước khi lưu vào database, mật khẩu được hash bằng thuật toán bcrypt với salt rounds = 10. Khi người dùng đăng nhập, mật khẩu nhập vào sẽ được so sánh với hash đã lưu bằng phương thức bcrypt.compare().
+
+3.2.4.2. Bảng ActivityHistory (Lịch sử hoạt động)
+
+	Bảng ActivityHistory ghi lại tất cả các hoạt động quan trọng của người dùng trong hệ thống, phục vụ mục đích audit và theo dõi. Cấu trúc bảng được mô tả trong Bảng 3.4.
+
+Bảng 3.4: Cấu trúc bảng ActivityHistory
+
+┌──────────────┬──────────────────┬─────────────────────┬────────────────────┐
+│ Tên trường   │ Kiểu dữ liệu     │ Ràng buộc           │ Mô tả              │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ id           │ INTEGER          │ PRIMARY KEY,        │ Mã định danh duy   │
+│              │                  │ AUTO_INCREMENT      │ nhất của bản ghi   │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ userId       │ INTEGER          │ NOT NULL,           │ Khóa ngoại tham    │
+│              │                  │ FOREIGN KEY         │ chiếu đến Users.id │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ action       │ STRING           │ NOT NULL            │ Loại hành động:    │
+│              │                  │                     │ REGISTER, LOGIN,   │
+│              │                  │                     │ GENERATE_KEYS,     │
+│              │                  │                     │ ENCRYPT_MESSAGE,   │
+│              │                  │                     │ DECRYPT_MESSAGE,   │
+│              │                  │                     │ FILE_ENCRYPT,      │
+│              │                  │                     │ FILE_DECRYPT       │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ details      │ TEXT             │ NULL                │ Mô tả chi tiết về  │
+│              │                  │                     │ hành động          │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ createdAt    │ DATETIME         │ AUTO                │ Thời gian thực     │
+│              │                  │                     │ hiện hành động     │
+├──────────────┼──────────────────┼─────────────────────┼────────────────────┤
+│ updatedAt    │ DATETIME         │ AUTO                │ Thời gian cập nhật │
+│              │                  │                     │ bản ghi            │
+└──────────────┴──────────────────┴─────────────────────┴────────────────────┘
+
+3.2.4.3. Quan hệ giữa các bảng
+
+	Hệ thống có mối quan hệ One-to-Many (1-n) giữa bảng Users và ActivityHistory:
+	- Một người dùng (Users) có thể có nhiều bản ghi lịch sử (ActivityHistory)
+	- Một bản ghi lịch sử (ActivityHistory) chỉ thuộc về một người dùng (Users)
+
+[Chèn Hình 3.X: Sơ đồ ERD thể hiện quan hệ giữa bảng Users và ActivityHistory]
+
+	Trong code Sequelize, quan hệ được định nghĩa như sau:
+
+User.hasMany(ActivityHistory, { foreignKey: 'userId' });
+ActivityHistory.belongsTo(User, { foreignKey: 'userId' });
+
+3.2.4.4. Cấu hình kết nối Database
+
+	Thông tin kết nối database được lưu trong file .env và được load thông qua module dotenv:
+
+PORT=5001
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=quy_db
+JWT_SECRET=your_jwt_secret_key_here
+NODE_ENV=development
+
+	Sequelize được cấu hình trong file backend/config/database.js để kết nối với MySQL database. Tùy chọn logging được tắt để giảm thiểu thông tin hiển thị trên console.
+
+Lưu ý: File .env chứa thông tin nhạy cảm như mật khẩu database và JWT secret. File này không được commit lên Git repository. Cần thêm .env vào file .gitignore để tránh lộ thông tin.
+
+
+
+================================================================================
+PHẦN 3: BỔ SUNG MỤC MỚI 3.3.4 - HỆ THỐNG XÁC THỰC VÀ PHÂN QUYỀN
+Vị trí: Sau mục 3.3.3. Các thư viện hỗ trợ
+================================================================================
+
+3.3.4. Hệ thống xác thực và phân quyền
+
+	Để đảm bảo tính bảo mật, hệ thống triển khai cơ chế xác thực người dùng bằng JWT (JSON Web Token) và phân quyền dựa trên vai trò (Role-Based Access Control - RBAC).
+
+3.3.4.1. Quy trình đăng ký tài khoản
+
+	Khi người dùng đăng ký tài khoản mới, hệ thống thực hiện các bước sau:
+	1. Nhận thông tin: Client gửi username, password và role (tùy chọn) đến endpoint POST /api/auth/register
+	2. Kiểm tra tính hợp lệ: Kiểm tra username chưa tồn tại trong database
+	3. Hash mật khẩu: Sử dụng bcrypt để hash mật khẩu với salt rounds = 10
+	4. Lưu vào database: Tạo bản ghi mới trong bảng Users
+	5. Ghi log: Tạo bản ghi trong ActivityHistory với action = "REGISTER"
+	6. Trả về kết quả: Thông báo đăng ký thành công
+
+[Chèn Hình 3.Y: Sơ đồ tuần tự - Quy trình đăng ký tài khoản]
+
+3.3.4.2. Quy trình đăng nhập
+
+	Khi người dùng đăng nhập, hệ thống thực hiện:
+	1. Nhận thông tin: Client gửi username và password đến POST /api/auth/login
+	2. Tìm người dùng: Truy vấn database để tìm user với username tương ứng
+	3. Xác thực mật khẩu: So sánh password nhập vào với hash đã lưu bằng bcrypt.compare()
+	4. Tạo JWT token: Nếu xác thực thành công, tạo JWT token chứa thông tin user (id, role)
+	5. Ghi log: Tạo bản ghi trong ActivityHistory với action = "LOGIN"
+	6. Trả về token: Gửi token và thông tin user về client
+
+	Cấu trúc JWT Token:
+
+{
+  "id": 1,
+  "role": "user",
+  "iat": 1234567890,
+  "exp": 1234654290
+}
+
+	Token được ký bằng JWT_SECRET từ file .env và có thời gian sống là 24 giờ.
+
+[Chèn Hình 3.Z: Sơ đồ tuần tự - Quy trình đăng nhập và cấp JWT token]
+
+3.3.4.3. Middleware xác thực
+
+	Để bảo vệ các API endpoint, hệ thống sử dụng authMiddleware để xác thực JWT token. Middleware này thực hiện các bước:
+	1. Lấy token từ header Authorization
+	2. Xác thực token bằng jwt.verify()
+	3. Tìm user trong database
+	4. Gắn thông tin user vào request object
+	5. Cho phép request tiếp tục nếu hợp lệ, ngược lại trả về lỗi 401
+
+	Middleware này được áp dụng cho tất cả các endpoint cần bảo vệ như sinh khóa, mã hóa, giải mã, xem lịch sử.
+
+3.3.4.4. Middleware phân quyền
+
+	Ngoài xác thực, hệ thống còn có middleware phân quyền dựa trên vai trò (roleMiddleware). Middleware này kiểm tra vai trò của người dùng có nằm trong danh sách vai trò được phép hay không. Nếu không có quyền, trả về lỗi 403 Forbidden.
+
+3.3.4.5. Bảng phân quyền chức năng
+
+	Bảng 3.5 mô tả quyền truy cập của các vai trò đối với từng chức năng trong hệ thống.
+
+Bảng 3.5: Phân quyền chức năng theo vai trò
+
+┌──────────────────────────────┬──────────┬──────────┬──────────────────┐
+│ Chức năng                    │ User     │ Admin    │ Guest (Chưa đăng │
+│                              │          │          │ nhập)            │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Đăng ký tài khoản            │ ✓        │ ✓        │ ✓                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Đăng nhập                    │ ✓        │ ✓        │ ✓                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Sinh khóa ElGamal            │ ✓        │ ✓        │ ✗                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Mã hóa tin nhắn              │ ✓        │ ✓        │ ✗                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Giải mã tin nhắn             │ ✓        │ ✓        │ ✗                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Mã hóa file                  │ ✓        │ ✓        │ ✗                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Giải mã file                 │ ✓        │ ✓        │ ✗                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Xem lịch sử cá nhân          │ ✓        │ ✓        │ ✗                │
+├──────────────────────────────┼──────────┼──────────┼──────────────────┤
+│ Xem lịch sử tất cả user      │ ✗        │ ✓        │ ✗                │
+└──────────────────────────────┴──────────┴──────────┴──────────────────┘
+
+Ghi chú: Trong phiên bản hiện tại, hệ thống chủ yếu phục vụ mục đích học tập nên chưa triển khai đầy đủ các chức năng dành riêng cho admin. Tuy nhiên, kiến trúc đã sẵn sàng để mở rộng các chức năng quản trị trong tương lai.
+
+
+
+================================================================================
+PHẦN 4: BỔ SUNG MỤC MỚI 3.5.4 - MÃ HÓA VÀ GIẢI MÃ FILE
+Vị trí: Sau mục 3.5.3. API giải mã
+================================================================================
+
+3.5.4. Mã hóa và giải mã file với AES-256-CBC
+
+	Ngoài mã hóa tin nhắn bằng ElGamal, hệ thống còn hỗ trợ mã hóa file sử dụng thuật toán AES-256-CBC (Advanced Encryption Standard với chế độ Cipher Block Chaining). Đây là thuật toán mã hóa đối xứng được sử dụng rộng rãi và có độ bảo mật cao.
+
+3.5.4.1. Lý do sử dụng AES thay vì ElGamal cho file
+
+	ElGamal là thuật toán mã hóa bất đối xứng, có những hạn chế khi mã hóa dữ liệu lớn:
+	- Kích thước bản mã lớn: Bản mã ElGamal gấp đôi kích thước bản rõ
+	- Tốc độ chậm: Các phép toán modulo với số lớn rất tốn thời gian
+	- Giới hạn kích thước: Chỉ mã hóa được dữ liệu có kích thước nhỏ hơn modulus p
+
+	Do đó, với file có kích thước lớn, hệ thống sử dụng AES-256-CBC vì:
+	- Tốc độ nhanh: Nhanh hơn ElGamal hàng trăm lần
+	- Hiệu quả: Kích thước bản mã gần bằng bản rõ
+	- Không giới hạn kích thước: Có thể mã hóa file bất kỳ
+	- Độ bảo mật cao: AES-256 là chuẩn mã hóa được chính phủ Mỹ sử dụng
+
+3.5.4.2. Thuật toán AES-256-CBC
+
+	AES (Advanced Encryption Standard) là thuật toán mã hóa khối đối xứng, được NIST (National Institute of Standards and Technology) công bố năm 2001 để thay thế DES. AES-256 sử dụng khóa 256 bit, cung cấp mức độ bảo mật rất cao.
+
+	CBC (Cipher Block Chaining) là một chế độ hoạt động của mã hóa khối, trong đó:
+	- Dữ liệu được chia thành các khối 128 bit
+	- Mỗi khối bản rõ được XOR với khối bản mã trước đó trước khi mã hóa
+	- Khối đầu tiên được XOR với IV (Initialization Vector) - vector khởi tạo ngẫu nhiên
+	- Điều này đảm bảo cùng một bản rõ sẽ tạo ra bản mã khác nhau mỗi lần mã hóa
+
+[Chèn Hình 3.A: Sơ đồ hoạt động của AES-256-CBC]
+
+3.5.4.3. Quy trình mã hóa file
+
+	Khi người dùng upload file để mã hóa, hệ thống thực hiện các bước sau:
+	1. Upload file: Client gửi file và password đến POST /api/files/encrypt
+	2. Lưu file tạm: Multer middleware lưu file vào thư mục uploads/ với tên ngẫu nhiên
+	3. Tạo khóa từ password: Sử dụng crypto.scryptSync() để derive khóa 256-bit từ password
+	4. Sinh IV ngẫu nhiên: Tạo Initialization Vector 16 bytes
+	5. Mã hóa file: Sử dụng cipher stream để mã hóa, ghi IV vào đầu file
+	6. Ghi log: Tạo bản ghi ActivityHistory với action = "FILE_ENCRYPT"
+	7. Trả về file: Download file đã mã hóa (.enc) về client
+	8. Dọn dẹp: Xóa file tạm trên server
+
+[Chèn Hình 3.B: Sơ đồ luồng mã hóa file]
+
+3.5.4.4. Quy trình giải mã file
+
+	Khi người dùng upload file đã mã hóa để giải mã:
+	1. Upload file .enc: Client gửi file và password đến POST /api/files/decrypt
+	2. Đọc IV: Đọc 16 bytes đầu tiên của file để lấy IV
+	3. Tạo khóa từ password: Derive khóa giống như lúc mã hóa
+	4. Giải mã: Sử dụng decipher để giải mã dữ liệu
+	5. Xử lý lỗi: Nếu password sai, decipher.final() sẽ throw error
+	6. Ghi log: Tạo bản ghi ActivityHistory với action = "FILE_DECRYPT"
+	7. Trả về file: Download file gốc đã giải mã về client
+	8. Dọn dẹp: Xóa file tạm trên server
+
+[Chèn Hình 3.C: Sơ đồ luồng giải mã file]
+
+3.5.4.5. API Endpoints cho mã hóa file
+
+API Mã hóa file:
+	Endpoint: POST /api/files/encrypt
+	Headers: Authorization: Bearer {jwt_token}
+	Content-Type: multipart/form-data
+	Body: file (File binary), password (String)
+	Response: File download (.enc) hoặc error message
+
+API Giải mã file:
+	Endpoint: POST /api/files/decrypt
+	Headers: Authorization: Bearer {jwt_token}
+	Content-Type: multipart/form-data
+	Body: file (File .enc binary), password (String)
+	Response: File download (file gốc) hoặc error message
+
+3.5.4.6. Bảo mật trong mã hóa file
+
+	Bảng 3.6 mô tả các khía cạnh bảo mật được áp dụng trong mã hóa file.
+
+Bảng 3.6: Các biện pháp bảo mật trong mã hóa file
+
+┌──────────────────────┬────────────────────────────────────────────────┐
+│ Khía cạnh bảo mật    │ Giải pháp áp dụng                              │
+├──────────────────────┼────────────────────────────────────────────────┤
+│ Key Derivation       │ Sử dụng scrypt để derive khóa từ password.    │
+│                      │ Scrypt là hàm KDF chống lại brute-force       │
+├──────────────────────┼────────────────────────────────────────────────┤
+│ Initialization       │ IV được sinh ngẫu nhiên cho mỗi lần mã hóa,   │
+│ Vector               │ đảm bảo cùng file với cùng password sẽ tạo ra │
+│                      │ bản mã khác nhau                               │
+├──────────────────────┼────────────────────────────────────────────────┤
+│ Xóa file tạm         │ File upload và file đã xử lý được xóa ngay    │
+│                      │ sau khi gửi về client, không lưu trữ trên     │
+│                      │ server                                         │
+├──────────────────────┼────────────────────────────────────────────────┤
+│ Xác thực người dùng  │ Yêu cầu JWT token hợp lệ, chỉ user đã đăng    │
+│                      │ nhập mới sử dụng được                          │
+├──────────────────────┼────────────────────────────────────────────────┤
+│ Giới hạn kích thước  │ Multer có thể cấu hình giới hạn kích thước    │
+│                      │ file upload để tránh DoS attack               │
+└──────────────────────┴────────────────────────────────────────────────┘
+
+Lưu ý quan trọng:
+	- Password không được lưu trữ, chỉ được sử dụng để derive khóa mã hóa
+	- Nếu quên password, không thể khôi phục file đã mã hóa
+	- Salt trong scrypt hiện tại là cố định ('salt'), trong production nên sử dụng salt ngẫu nhiên và lưu cùng file
+	- IV được lưu ở đầu file mã hóa, đây là thực hành chuẩn và an toàn
+
+
+
+================================================================================
+PHẦN 5: BỔ SUNG MỤC MỚI 3.5.5 - HỆ THỐNG LỊCH SỬ HOẠT ĐỘNG
+Vị trí: Sau mục 3.5.4. Mã hóa và giải mã file
+================================================================================
+
+3.5.5. Hệ thống ghi log và lịch sử hoạt động
+
+	Để tăng cường tính minh bạch và khả năng audit, hệ thống ghi lại tất cả các hoạt động quan trọng của người dùng vào bảng ActivityHistory. Điều này giúp:
+	- Theo dõi hành vi: Biết được người dùng đã làm gì, khi nào
+	- Phát hiện bất thường: Nhận biết các hoạt động đáng ngờ
+	- Tuân thủ quy định: Đáp ứng yêu cầu về audit trail trong bảo mật
+	- Hỗ trợ debug: Giúp tìm nguyên nhân khi có vấn đề
+
+3.5.5.1. Các loại hoạt động được ghi log
+
+	Bảng 3.7 mô tả các loại hoạt động được ghi lại trong hệ thống.
+
+Bảng 3.7: Các loại hoạt động được ghi log
+
+┌──────────────────┬────────────────────────────┬──────────────────────────┐
+│ Action           │ Khi nào được ghi           │ Ví dụ Details            │
+├──────────────────┼────────────────────────────┼──────────────────────────┤
+│ REGISTER         │ Khi người dùng đăng ký tài │ "Người dùng john_doe đã  │
+│                  │ khoản mới                  │ đăng ký tài khoản."      │
+├──────────────────┼────────────────────────────┼──────────────────────────┤
+│ LOGIN            │ Khi người dùng đăng nhập   │ "Người dùng john_doe đã  │
+│                  │ thành công                 │ đăng nhập."              │
+├──────────────────┼────────────────────────────┼──────────────────────────┤
+│ GENERATE_KEYS    │ Khi sinh cặp khóa ElGamal  │ "Đã tạo cặp khóa ElGamal │
+│                  │                            │ (512 bits)."             │
+├──────────────────┼────────────────────────────┼──────────────────────────┤
+│ ENCRYPT_MESSAGE  │ Khi mã hóa tin nhắn bằng   │ "Đã mã hóa tin nhắn bằng │
+│                  │ ElGamal                    │ ElGamal."                │
+├──────────────────┼────────────────────────────┼──────────────────────────┤
+│ DECRYPT_MESSAGE  │ Khi giải mã tin nhắn bằng  │ "Đã giải mã tin nhắn     │
+│                  │ ElGamal                    │ bằng ElGamal."           │
+├──────────────────┼────────────────────────────┼──────────────────────────┤
+│ FILE_ENCRYPT     │ Khi mã hóa file bằng       │ "Đã mã hóa file:         │
+│                  │ AES-256                    │ document.pdf"            │
+├──────────────────┼────────────────────────────┼──────────────────────────┤
+│ FILE_DECRYPT     │ Khi giải mã file bằng      │ "Đã giải mã file:        │
+│                  │ AES-256                    │ document.pdf.enc"        │
+└──────────────────┴────────────────────────────┴──────────────────────────┘
+
+3.5.5.2. Cách ghi log trong code
+
+	Mỗi khi có hoạt động quan trọng, hệ thống tạo bản ghi mới trong ActivityHistory. Ví dụ khi đăng nhập thành công:
+
+await ActivityHistory.create({
+    userId: user.id,
+    action: 'LOGIN',
+    details: `Người dùng ${username} đã đăng nhập.`
+});
+
+	Thông tin req.user được cung cấp bởi authMiddleware, đảm bảo mọi log đều được gắn với đúng người dùng.
+
+3.5.5.3. API lấy lịch sử hoạt động
+
+	Người dùng có thể xem lịch sử hoạt động của mình thông qua API:
+	Endpoint: GET /api/files/history
+	Headers: Authorization: Bearer {jwt_token}
+	Response: Mảng các object chứa id, userId, action, details, createdAt, updatedAt
+
+	Dữ liệu được sắp xếp theo thời gian giảm dần (mới nhất trước), chỉ hiển thị lịch sử của người dùng hiện tại.
+
+3.5.5.4. Giao diện hiển thị lịch sử
+
+	Trên Frontend, tab "Lịch Sử" hiển thị dữ liệu dưới dạng bảng với các cột:
+	- Thời gian: Hiển thị dạng DD/MM/YYYY HH:mm:ss
+	- Hành động: Badge màu sắc theo loại action (Mã hóa: màu xanh, Giải mã: màu xanh lá, Khác: màu xám)
+	- Chi tiết: Mô tả cụ thể về hoạt động
+
+[Chèn Hình 3.D: Giao diện tab Lịch Sử với bảng hiển thị các hoạt động]
+
+3.5.5.5. Lợi ích của hệ thống lịch sử
+
+	Hệ thống lịch sử mang lại các lợi ích thực tế:
+	- Truy vết: Biết chính xác ai đã làm gì, khi nào
+	- Phát hiện xâm nhập: Nếu có hoạt động lạ, người dùng có thể phát hiện ngay
+	- Thống kê: Có thể phân tích hành vi người dùng, tần suất sử dụng các tính năng
+	- Tuân thủ: Đáp ứng yêu cầu về audit log trong các tiêu chuẩn bảo mật như ISO 27001
+	- Hỗ trợ người dùng: Khi có vấn đề, có thể xem lại lịch sử để tìm nguyên nhân
+
+3.5.5.6. Cải tiến trong tương lai
+
+	Hệ thống lịch sử có thể được mở rộng với các tính năng:
+	- Lọc và tìm kiếm: Lọc theo loại action, khoảng thời gian
+	- Export: Xuất lịch sử ra file CSV, PDF
+	- Thông báo: Gửi email khi có hoạt động bất thường
+	- Dashboard admin: Admin xem được lịch sử của tất cả user
+	- Retention policy: Tự động xóa log cũ sau một khoảng thời gian
+	- IP tracking: Ghi lại địa chỉ IP của người dùng
+
+
+
+================================================================================
+PHẦN 6: BỔ SUNG VÀO CHƯƠNG 5.2 - KIỂM THỬ CHỨC NĂNG
+Vị trí: Sau mục 5.2.3. Kiểm thử giải mã
+================================================================================
+
+5.2.4. Kiểm thử chức năng xác thực
+
+	Bảng 5.4 trình bày các test case cho chức năng xác thực người dùng.
+
+Bảng 5.4: Kết quả kiểm thử chức năng xác thực
+
+┌────────────┬──────────────────────┬──────────────────────┬──────────┬────────────┐
+│ Test Case  │ Mô tả                │ Input                │ Kết quả  │ Ghi chú    │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-AUTH-01 │ Đăng ký với thông    │ username: "testuser" │ Thành    │ User được  │
+│            │ tin hợp lệ           │ password: "Test@123" │ công     │ tạo,       │
+│            │                      │                      │          │ password   │
+│            │                      │                      │          │ được hash  │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-AUTH-02 │ Đăng ký với username │ username: "testuser" │ Lỗi hợp  │ Hiển thị   │
+│            │ đã tồn tại           │ (trùng)              │ lý       │ "Username  │
+│            │                      │                      │          │ đã tồn tại"│
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-AUTH-03 │ Đăng nhập với thông  │ username: "testuser" │ Thành    │ Nhận được  │
+│            │ tin đúng             │ password: "Test@123" │ công     │ JWT token  │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-AUTH-04 │ Đăng nhập với        │ password:            │ Lỗi hợp  │ Hiển thị   │
+│            │ password sai         │ "WrongPass"          │ lý       │ "Mật khẩu  │
+│            │                      │                      │          │ không đúng"│
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-AUTH-05 │ Truy cập API không   │ GET /api/files/      │ Lỗi 401  │ "Không có  │
+│            │ có token             │ history (không có    │          │ token"     │
+│            │                      │ header)              │          │            │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-AUTH-06 │ Truy cập API với     │ Token:               │ Lỗi 401  │ "Token     │
+│            │ token không hợp lệ   │ "invalid_token_xyz"  │          │ không hợp  │
+│            │                      │                      │          │ lệ"        │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-AUTH-07 │ Kiểm tra độ mạnh     │ password: "abc" →    │ Thành    │ Thanh độ   │
+│            │ mật khẩu             │ "Abc1" → "Abc@123"   │ công     │ mạnh thay  │
+│            │                      │                      │          │ đổi màu    │
+└────────────┴──────────────────────┴──────────────────────┴──────────┴────────────┘
+
+5.2.5. Kiểm thử mã hóa file
+
+	Bảng 5.5 trình bày các test case cho chức năng mã hóa và giải mã file.
+
+Bảng 5.5: Kết quả kiểm thử mã hóa file
+
+┌────────────┬──────────────────────┬──────────────────────┬──────────┬────────────┐
+│ Test Case  │ Mô tả                │ Input                │ Kết quả  │ Ghi chú    │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-01 │ Mã hóa file text nhỏ │ File: test.txt (1KB) │ Thành    │ Nhận được  │
+│            │                      │ Password: "pass123"  │ công     │ test.txt.  │
+│            │                      │                      │          │ enc        │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-02 │ Giải mã file với     │ File: test.txt.enc   │ Thành    │ File gốc   │
+│            │ password đúng        │ Password: "pass123"  │ công     │ được khôi  │
+│            │                      │                      │          │ phục chính │
+│            │                      │                      │          │ xác        │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-03 │ Giải mã file với     │ Password:            │ Lỗi hợp  │ "Giải mã   │
+│            │ password sai         │ "wrongpass"          │ lý       │ thất bại.  │
+│            │                      │                      │          │ Mật khẩu   │
+│            │                      │                      │          │ sai"       │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-04 │ Mã hóa file PDF      │ File: document.pdf   │ Thành    │ Mã hóa     │
+│            │                      │ (500KB)              │ công     │ thành công,│
+│            │                      │                      │          │ file mở    │
+│            │                      │                      │          │ được sau   │
+│            │                      │                      │          │ giải mã    │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-05 │ Mã hóa file hình ảnh │ File: photo.jpg      │ Thành    │ Hình ảnh   │
+│            │                      │ (2MB)                │ công     │ hiển thị   │
+│            │                      │                      │          │ đúng sau   │
+│            │                      │                      │          │ giải mã    │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-06 │ Mã hóa file lớn      │ File: video.mp4      │ Thành    │ Thời gian  │
+│            │                      │ (50MB)               │ công     │ xử lý: ~5- │
+│            │                      │                      │          │ 10 giây    │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-07 │ Upload không chọn    │ Không chọn file, chỉ │ Lỗi hợp  │ "Vui lòng  │
+│            │ file                 │ nhập password        │ lý       │ chọn file" │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-FILE-08 │ Upload không nhập    │ Chọn file, không     │ Lỗi hợp  │ "Vui lòng  │
+│            │ password             │ nhập password        │ lý       │ nhập mật   │
+│            │                      │                      │          │ khẩu"      │
+└────────────┴──────────────────────┴──────────────────────┴──────────┴────────────┘
+
+5.2.6. Kiểm thử lịch sử hoạt động
+
+	Bảng 5.6 trình bày các test case cho chức năng lịch sử hoạt động.
+
+Bảng 5.6: Kết quả kiểm thử lịch sử hoạt động
+
+┌────────────┬──────────────────────┬──────────────────────┬──────────┬────────────┐
+│ Test Case  │ Mô tả                │ Input                │ Kết quả  │ Ghi chú    │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-HIST-01 │ Xem lịch sử sau đăng │ Chuyển sang tab      │ Thành    │ Hiển thị   │
+│            │ nhập                 │ "Lịch Sử"            │ công     │ danh sách  │
+│            │                      │                      │          │ hoạt động  │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-HIST-02 │ Kiểm tra log đăng ký │ Sau khi đăng ký tài  │ Thành    │ Có bản ghi │
+│            │                      │ khoản mới            │ công     │ "REGISTER" │
+│            │                      │                      │          │ trong lịch │
+│            │                      │                      │          │ sử         │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-HIST-03 │ Kiểm tra log mã hóa  │ Sau khi mã hóa file  │ Thành    │ Có bản ghi │
+│            │ file                 │ "test.pdf"           │ công     │ "FILE_     │
+│            │                      │                      │          │ ENCRYPT"   │
+│            │                      │                      │          │ với tên    │
+│            │                      │                      │          │ file       │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-HIST-04 │ Kiểm tra thứ tự sắp  │ Thực hiện nhiều hoạt │ Thành    │ Hoạt động  │
+│            │ xếp                  │ động                 │ công     │ mới nhất   │
+│            │                      │                      │          │ hiển thị   │
+│            │                      │                      │          │ đầu tiên   │
+├────────────┼──────────────────────┼──────────────────────┼──────────┼────────────┤
+│ TC-HIST-05 │ Kiểm tra phân quyền  │ User A xem lịch sử   │ Thành    │ Chỉ thấy   │
+│            │                      │                      │ công     │ hoạt động  │
+│            │                      │                      │          │ của chính  │
+│            │                      │                      │          │ mình       │
+└────────────┴──────────────────────┴──────────────────────┴──────────┴────────────┘
+
+5.2.7. Tổng hợp kết quả kiểm thử
+
+	Bảng 5.7 tổng hợp kết quả kiểm thử tất cả các chức năng của hệ thống.
+
+Bảng 5.7: Tổng hợp kết quả kiểm thử
+
+┌──────────────────────────────┬──────────────┬──────────┬──────────┬──────────┐
+│ Nhóm chức năng               │ Số test case │ Passed   │ Failed   │ Tỷ lệ    │
+├──────────────────────────────┼──────────────┼──────────┼──────────┼──────────┤
+│ Xác thực (Authentication)    │ 7            │ 7        │ 0        │ 100%     │
+├──────────────────────────────┼──────────────┼──────────┼──────────┼──────────┤
+│ Mã hóa file (File            │ 8            │ 8        │ 0        │ 100%     │
+│ Encryption)                  │              │          │          │          │
+├──────────────────────────────┼──────────────┼──────────┼──────────┼──────────┤
+│ Lịch sử hoạt động (History)  │ 5            │ 5        │ 0        │ 100%     │
+├──────────────────────────────┼──────────────┼──────────┼──────────┼──────────┤
+│ TỔNG CỘNG                    │ 20           │ 20       │ 0        │ 100%     │
+└──────────────────────────────┴──────────────┴──────────┴──────────┴──────────┘
+
+	Kết quả kiểm thử cho thấy tất cả các chức năng mới được bổ sung đều hoạt động đúng đắn và ổn định. Tỷ lệ test case passed đạt 100%, chứng tỏ hệ thống đã được triển khai thành công và sẵn sàng sử dụng.
+
+
+
+================================================================================
+PHẦN 7: CẬP NHẬT DANH MỤC HÌNH ẢNH
+Vị trí: Thêm vào phần "DANH MỤC HÌNH ẢNH" (sau các hình đã có)
+================================================================================
+
+Hình 3.X: Sơ đồ ERD (Entity Relationship Diagram) - Quan hệ giữa bảng Users và ActivityHistory
+Hình 3.Y: Sơ đồ tuần tự - Quy trình đăng ký tài khoản
+Hình 3.Z: Sơ đồ tuần tự - Quy trình đăng nhập và cấp JWT token
+Hình 3.A: Sơ đồ hoạt động của AES-256-CBC
+Hình 3.B: Sơ đồ luồng mã hóa file
+Hình 3.C: Sơ đồ luồng giải mã file
+Hình 3.D: Giao diện tab Lịch Sử với bảng hiển thị hoạt động
+Hình 4.X: Giao diện đăng ký với password strength indicator
+Hình 4.Y: Giao diện tab File với drag & drop
+Hình 5.X: Giao diện đăng nhập thực tế
+Hình 5.Y: Giao diện tab File đang mã hóa (loading state)
+Hình 5.Z: Giao diện tab Lịch Sử với dữ liệu thực tế
+
+================================================================================
+PHẦN 8: CẬP NHẬT DANH MỤC BẢNG BIỂU
+Vị trí: Thêm vào phần "DANH MỤC BẢNG BIỂU" (sau các bảng đã có)
+================================================================================
+
+Bảng 3.2: Yêu cầu chức năng bổ sung
+Bảng 3.3: Cấu trúc bảng Users
+Bảng 3.4: Cấu trúc bảng ActivityHistory
+Bảng 3.5: Phân quyền chức năng theo vai trò
+Bảng 3.6: Các biện pháp bảo mật trong mã hóa file
+Bảng 3.7: Các loại hoạt động được ghi log
+Bảng 5.4: Kết quả kiểm thử chức năng xác thực
+Bảng 5.5: Kết quả kiểm thử mã hóa file
+Bảng 5.6: Kết quả kiểm thử lịch sử hoạt động
+Bảng 5.7: Tổng hợp kết quả kiểm thử
+
+================================================================================
+PHẦN 9: CẬP NHẬT DANH MỤC TỪ VIẾT TẮT
+Vị trí: Thêm vào phần "DANH MỤC TỪ VIẾT TẮT" (sau các từ đã có)
+================================================================================
+
+AES		Advanced Encryption Standard - Chuẩn mã hóa tiên tiến
+CBC		Cipher Block Chaining - Chuỗi khối mã hóa
+JWT		JSON Web Token - Token web JSON
+ORM		Object-Relational Mapping - Ánh xạ quan hệ đối tượng
+RBAC		Role-Based Access Control - Kiểm soát truy cập dựa trên vai trò
+IV		Initialization Vector - Vector khởi tạo
+KDF		Key Derivation Function - Hàm dẫn xuất khóa
+CRUD		Create, Read, Update, Delete - Tạo, Đọc, Cập nhật, Xóa
+ERD		Entity Relationship Diagram - Sơ đồ quan hệ thực thể
+
+================================================================================
+PHẦN 10: BỔ SUNG VÀO KẾT LUẬN
+Vị trí: Thêm vào phần "KẾT LUẬN" (trước đoạn cuối)
+================================================================================
+
+	Về các tính năng mở rộng: Ngoài việc triển khai thành công thuật toán ElGamal, đồ án còn được mở rộng với nhiều tính năng thực tế quan trọng. Hệ thống xác thực và phân quyền được triển khai đầy đủ với JWT authentication và phân quyền user/admin. Mật khẩu được bảo vệ bằng bcrypt hash, đảm bảo an toàn ngay cả khi database bị xâm nhập. Cơ sở dữ liệu MySQL được sử dụng với Sequelize ORM để quản lý 2 bảng chính (Users và ActivityHistory), thiết lập quan hệ và ràng buộc dữ liệu hợp lý.
+
+	Đặc biệt, hệ thống bổ sung khả năng mã hóa file bất kỳ (không chỉ văn bản) sử dụng thuật toán AES-256-CBC - chuẩn mã hóa đối xứng mạnh mẽ. Điều này giải quyết được hạn chế của ElGamal khi xử lý dữ liệu lớn. Hệ thống lịch sử hoạt động ghi lại đầy đủ các hoạt động của người dùng, phục vụ mục đích audit và tuân thủ các tiêu chuẩn bảo mật. Mỗi user chỉ xem được lịch sử của chính mình, đảm bảo quyền riêng tư.
+
+	Giao diện người dùng được thiết kế hiện đại với dark theme, hỗ trợ drag & drop upload file, hiển thị độ mạnh mật khẩu realtime, và nhiều tính năng UX khác giúp trải nghiệm người dùng mượt mà. Những tính năng mở rộng này không chỉ làm tăng giá trị thực tiễn của đồ án mà còn thể hiện khả năng tích hợp nhiều công nghệ và kỹ thuật bảo mật khác nhau vào một hệ thống hoàn chỉnh. Hệ thống không còn chỉ là công cụ minh họa thuật toán mà đã trở thành một ứng dụng bảo mật thực tế có thể sử dụng được.
+
+================================================================================
+HƯỚNG DẪN SỬ DỤNG FILE NÀY
+================================================================================
+
+1. MỞ FILE WORD BÁO CÁO CỦA BẠN
+
+2. ĐỊNH DẠNG CHUẨN:
+   - Font: Times New Roman
+   - Cỡ chữ: 13pt
+   - Dãn dòng: 1.5
+   - Lề: Trái 3cm, Phải 2cm, Trên/Dưới 2cm
+   - Căn đều 2 bên (Justify)
+   - Thụt đầu dòng: 1cm
+
+3. COPY TỪNG PHẦN:
+   - Tìm "PHẦN 1", "PHẦN 2", ... trong file này
+   - Đọc "Vị trí" để biết chèn vào đâu trong Word
+   - Bôi đen toàn bộ nội dung phần đó
+   - Copy (Ctrl+C)
+   - Paste vào Word (Ctrl+V) ở vị trí đúng
+
+4. CHỈNH SỬA BẢNG:
+   - Bảng trong file này dùng ký tự ASCII
+   - Khi paste vào Word, tạo lại bảng bằng Insert > Table
+   - Copy nội dung từng ô vào bảng Word
+
+5. CHÈN HÌNH ẢNH:
+   - Tìm dòng [Chèn Hình X.Y: ...]
+   - Chụp màn hình hoặc vẽ sơ đồ
+   - Insert > Picture vào vị trí đó
+   - Xóa dòng [Chèn Hình...]
+
+6. CẬP NHẬT SỐ THỨ TỰ:
+   - Thay X, Y, Z bằng số thứ tự thực tế
+   - Ví dụ: Hình 3.X → Hình 3.8
+   - Đảm bảo tham chiếu đúng trong văn bản
+
+7. KIỂM TRA LẠI:
+   - Đọc lại toàn bộ phần đã chèn
+   - Kiểm tra format, lỗi chính tả
+   - Đảm bảo số trang, mục lục đúng
+
+================================================================================
+KẾT THÚC FILE BỔ SUNG
+================================================================================
