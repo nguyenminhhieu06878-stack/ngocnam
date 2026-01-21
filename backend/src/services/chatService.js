@@ -315,9 +315,49 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
     
     // Tìm kiếm tài liệu liên quan (tăng số lượng nếu là câu hỏi tư vấn hoặc nhiệm vụ)
     const topK = isResponsibility ? 15 : isAdvisory ? 10 : 5;
-    const searchResults = await searchSimilarDocuments(message, topK, requestedCategory);
+    let searchResults;
     
-    console.log(`🔍 Tìm thấy ${searchResults.documents[0].length} chunks liên quan (mode: ${isResponsibility ? 'responsibility' : isAdvisory ? 'advisory' : 'general'})`);
+    try {
+      searchResults = await searchSimilarDocuments(message, topK, requestedCategory);
+      console.log(`🔍 Tìm thấy ${searchResults.documents[0].length} chunks liên quan (mode: ${isResponsibility ? 'responsibility' : isAdvisory ? 'advisory' : 'general'})`);
+    } catch (vectorError) {
+      console.warn('⚠️ ChromaDB không khả dụng, fallback sang tìm kiếm MongoDB:', vectorError.message);
+      
+      // Fallback: Tìm kiếm trong MongoDB
+      const query = requestedCategory ? { category: requestedCategory, status: 'ready' } : { status: 'ready' };
+      const documents = await Document.find(query).select('title category content').limit(topK);
+      
+      if (documents.length === 0) {
+        return {
+          message: `Xin lỗi, tôi không tìm thấy thông tin về "${message}" trong các tài liệu hiện có. 😔
+
+**Gợi ý:**
+- Thử hỏi theo cách khác hoặc cụ thể hơn
+- Kiểm tra xem tài liệu liên quan đã được upload chưa
+- Liên hệ Admin để upload thêm tài liệu
+
+Bạn có muốn hỏi điều gì khác không?`,
+          sources: []
+        };
+      }
+      
+      // Tạo context từ MongoDB documents
+      const context = documents.map(doc => 
+        `[Tài liệu: ${doc.title} - ${doc.category}]\n${doc.content.substring(0, 2000)}`
+      ).join('\n\n---\n\n');
+      
+      const mode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
+      const response = await generateResponse(message, context, requestedCategory, mode);
+      
+      return {
+        message: response,
+        sources: documents.map(doc => ({
+          title: doc.title,
+          category: doc.category,
+          documentId: doc._id
+        }))
+      };
+    }
     
     // Nếu không tìm thấy tài liệu liên quan, trả lời thân thiện
     if (!searchResults.documents[0] || searchResults.documents[0].length === 0) {

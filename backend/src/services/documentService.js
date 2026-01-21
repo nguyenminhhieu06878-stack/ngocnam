@@ -31,13 +31,18 @@ export async function uploadDocument(file, metadata) {
     
     await document.save();
     
-    // Xử lý embedding và lưu vào vector database
-    const vectorId = await embedDocument(document._id.toString(), content, {
-      title: document.title,
-      category: document.category
-    });
+    // Xử lý embedding và lưu vào vector database (optional - không fail nếu ChromaDB không có)
+    try {
+      const vectorId = await embedDocument(document._id.toString(), content, {
+        title: document.title,
+        category: document.category
+      });
+      document.vectorId = vectorId;
+    } catch (vectorError) {
+      console.warn('⚠️ Không thể kết nối ChromaDB, bỏ qua vector embedding:', vectorError.message);
+      // Không throw error, vẫn cho phép upload thành công
+    }
     
-    document.vectorId = vectorId;
     document.status = 'ready';
     await document.save();
     
@@ -60,20 +65,27 @@ async function extractTextFromFile(file) {
     const result = await mammoth.extractRawText({ buffer });
     return result.value;
   } else if (ext === '.doc') {
-    // Dùng textract cho file .doc cũ
+    // Thử mammoth trước (hỗ trợ cả .doc và .docx)
+    try {
+      const result = await mammoth.extractRawText({ buffer });
+      if (result.value && result.value.trim().length > 0) {
+        return result.value;
+      }
+    } catch (error) {
+      console.log('Mammoth không đọc được, thử textract...');
+    }
+    
+    // Fallback: dùng textract cho file .doc cũ
     try {
       const text = await textractFromFile(file.path);
-      return text;
+      if (text && text.trim().length > 0) {
+        return text;
+      }
     } catch (error) {
       console.error('Lỗi đọc file .doc với textract:', error);
-      // Fallback: thử mammoth
-      try {
-        const result = await mammoth.extractRawText({ buffer });
-        return result.value;
-      } catch (e) {
-        throw new Error('Không thể đọc file .doc. Vui lòng chuyển sang .docx hoặc .pdf');
-      }
     }
+    
+    throw new Error('Không thể đọc file .doc. Vui lòng chuyển sang định dạng .docx hoặc .pdf để đảm bảo tương thích tốt nhất.');
   } else if (ext === '.txt') {
     return buffer.toString('utf-8');
   }
