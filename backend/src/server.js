@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import documentRoutes from './routes/documents.js';
@@ -11,6 +12,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config({ path: join(__dirname, '../.env') });
+
+// Tạo thư mục uploads nếu chưa có (cần thiết cho Railway)
+const uploadsDir = join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('✅ Đã tạo thư mục uploads');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
