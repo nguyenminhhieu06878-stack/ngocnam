@@ -338,8 +338,20 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
       
       // Nếu không tìm thấy, lấy tất cả documents
       if (documents.length === 0) {
-        const allDocs = await Document.find(query).select('title category content').limit(topK);
-        documents.push(...allDocs);
+        // Không có tài liệu nào → dùng kiến thức chung
+        console.log('🌐 Không có tài liệu, dùng kiến thức chung của AI...');
+        
+        const response = await generateResponse(
+          message, 
+          'Không tìm thấy thông tin trong tài liệu nội bộ. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
+          requestedCategory,
+          mode
+        );
+        
+        return {
+          message: response + '\n\n💡 *Lưu ý: Thông tin này dựa trên kiến thức chung, chưa có trong tài liệu nội bộ.*',
+          sources: []
+        };
       }
       
       if (documents.length === 0) {
