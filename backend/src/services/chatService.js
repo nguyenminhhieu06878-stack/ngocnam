@@ -323,9 +323,24 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
     } catch (vectorError) {
       console.warn('⚠️ ChromaDB không khả dụng, fallback sang tìm kiếm MongoDB:', vectorError.message);
       
-      // Fallback: Tìm kiếm trong MongoDB
+      // Fallback: Tìm kiếm trong MongoDB với text search
       const query = requestedCategory ? { category: requestedCategory, status: 'ready' } : { status: 'ready' };
-      const documents = await Document.find(query).select('title category content').limit(topK);
+      
+      // Thử tìm kiếm text trong content
+      const searchRegex = new RegExp(message.split(' ').filter(w => w.length > 2).join('|'), 'i');
+      const documents = await Document.find({
+        ...query,
+        $or: [
+          { content: searchRegex },
+          { title: searchRegex }
+        ]
+      }).select('title category content').limit(topK);
+      
+      // Nếu không tìm thấy, lấy tất cả documents
+      if (documents.length === 0) {
+        const allDocs = await Document.find(query).select('title category content').limit(topK);
+        documents.push(...allDocs);
+      }
       
       if (documents.length === 0) {
         return {
