@@ -107,13 +107,26 @@ Khi trả lời:
 Trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.`;
     }
 
-    const userPrompt = `Dựa trên các tài liệu sau:
+    // Kiểm tra xem có phải context fallback không
+    const isFallbackContext = context.includes('Không tìm thấy thông tin trong tài liệu') || 
+                              context.includes('kiến thức chung');
+    
+    let userPrompt;
+    if (isFallbackContext) {
+      // Nếu là fallback, cho phép AI dùng kiến thức chung
+      userPrompt = `Câu hỏi: ${prompt}
+
+Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh. Trả lời ngắn gọn, súc tích, tự nhiên.`;
+    } else {
+      // Nếu có tài liệu, dựa vào tài liệu
+      userPrompt = `Dựa trên các tài liệu sau:
 
 ${context}
 
 Câu hỏi: ${prompt}
 
-Hãy trả lời ngắn gọn, chỉ dựa vào thông tin có trong tài liệu. Nếu không có thông tin, hãy nói rõ.`;
+Hãy trả lời ngắn gọn dựa vào thông tin trong tài liệu.`;
+    }
 
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
