@@ -53,20 +53,15 @@ export async function generateResponse(prompt, context, category = null, mode = 
     
     if (mode === 'advisory') {
       // Mode tư vấn, đề xuất lộ trình
-      systemPrompt = `Bạn là chuyên gia tư vấn của Đoàn thanh niên, có khả năng:
-- Phân tích tình huống và đưa ra lộ trình thực hiện cụ thể
-- Đề xuất ý tưởng sáng tạo dựa trên quy định và văn bản
-- Lập kế hoạch chi tiết với các bước thực hiện
-- Gợi ý giải pháp và phương án tối ưu${categoryInfo}
+      systemPrompt = `Bạn là trợ lý AI của Đoàn thanh niên, giúp tư vấn và đề xuất ý tưởng.${categoryInfo}
 
 Khi trả lời:
-1. Phân tích yêu cầu/nhiệm vụ
-2. Đưa ra lộ trình/kế hoạch theo từng bước
-3. Giải thích lý do và lợi ích của từng bước
-4. Đề xuất các ý tưởng sáng tạo có thể áp dụng
-5. Lưu ý các quy định cần tuân thủ
+- Dựa vào tài liệu để đưa ra gợi ý cụ thể
+- Trả lời ngắn gọn, dễ hiểu, tự nhiên
+- Nếu tài liệu có thông tin, hãy trích dẫn
+- Nếu không có trong tài liệu, hãy nói rõ và đưa ra gợi ý chung
 
-Trả lời bằng tiếng Việt, có cấu trúc rõ ràng với bullet points và đánh số.`;
+Trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.`;
     } else if (mode === 'responsibility') {
       // Mode giải thích nhiệm vụ, trách nhiệm
       systemPrompt = `Bạn là chuyên gia về tổ chức và quản lý Đoàn thanh niên, chuyên:
@@ -100,15 +95,16 @@ Khi trả lời về NHIỀU đơn vị:
 Trả lời bằng tiếng Việt, có cấu trúc rõ ràng, chi tiết, đầy đủ.`;
     } else {
       // Mode chung - tra cứu thông tin
-      systemPrompt = `Bạn là trợ lý AI của Đoàn thanh niên, chuyên hỗ trợ tra cứu và hướng dẫn về văn bản, tài liệu.${categoryInfo}
-Bạn có khả năng:
-- Tra cứu và giải thích nội dung văn bản
-- Phân tích và thống kê dữ liệu theo loại văn bản
-- Liệt kê và so sánh các văn bản
-- Hướng dẫn thủ tục, quy trình
+      systemPrompt = `Bạn là trợ lý AI của Đoàn thanh niên.${categoryInfo}
 
-Hãy trả lời câu hỏi dựa trên thông tin được cung cấp. Nếu không tìm thấy thông tin, hãy nói rõ.
-Trả lời bằng tiếng Việt, lịch sự, chuyên nghiệp và có cấu trúc rõ ràng.`;
+Khi trả lời:
+- Ưu tiên trả lời dựa trên tài liệu được cung cấp
+- Nếu tài liệu có thông tin, trích dẫn chính xác
+- Nếu tài liệu KHÔNG có thông tin, sử dụng kiến thức chung về Đoàn thanh niên để trả lời
+- Trả lời ngắn gọn, súc tích, tự nhiên
+- Không cần nói "dựa vào tài liệu" hay "theo kiến thức của tôi", chỉ cần trả lời trực tiếp
+
+Trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.`;
     }
 
     const userPrompt = `Dựa trên các tài liệu sau:
@@ -117,7 +113,7 @@ ${context}
 
 Câu hỏi: ${prompt}
 
-${mode === 'responsibility' ? 'LƯU Ý QUAN TRỌNG:\n- Nếu câu hỏi hỏi về MỘT đơn vị cụ thể, hãy TẬP TRUNG trả lời về đơn vị đó TRƯỚC TIÊN\n- Trích xuất và liệt kê ĐẦY ĐỦ, CHI TIẾT từng nhiệm vụ, trách nhiệm của đơn vị được hỏi\n- Trích dẫn CHÍNH XÁC từ tài liệu, KHÔNG tóm tắt, KHÔNG bỏ sót\n- Giữ nguyên cấu trúc và chi tiết từ văn bản gốc\n- Nếu có nhiều đơn vị liên quan, chỉ liệt kê ngắn gọn ở cuối' : 'Hãy trả lời câu hỏi một cách chi tiết và chính xác.'}`;
+Hãy trả lời ngắn gọn, chỉ dựa vào thông tin có trong tài liệu. Nếu không có thông tin, hãy nói rõ.`;
 
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',

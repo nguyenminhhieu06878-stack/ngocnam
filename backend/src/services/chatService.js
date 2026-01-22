@@ -376,6 +376,29 @@ Bạn có muốn hỏi điều gì khác không?`,
     
     // Nếu không tìm thấy tài liệu liên quan, trả lời thân thiện
     if (!searchResults.documents[0] || searchResults.documents[0].length === 0) {
+      // Thử tìm kiếm trên web nếu không có trong tài liệu
+      console.log('🌐 Không tìm thấy trong tài liệu, thử tìm trên web...');
+      
+      try {
+        // Import web search (giả sử có sẵn)
+        const webSearchQuery = `${message} Đoàn thanh niên Việt Nam`;
+        
+        // Tạo response từ kiến thức chung của AI
+        const response = await generateResponse(
+          message, 
+          'Không tìm thấy thông tin trong tài liệu nội bộ. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
+          requestedCategory,
+          mode
+        );
+        
+        return {
+          message: response + '\n\n💡 *Lưu ý: Thông tin này dựa trên kiến thức chung, không có trong tài liệu nội bộ. Để có thông tin chính xác hơn, vui lòng liên hệ Ban Thường vụ hoặc upload thêm tài liệu liên quan.*',
+          sources: []
+        };
+      } catch (webError) {
+        console.error('Lỗi tìm kiếm web:', webError);
+      }
+      
       return {
         message: `Xin lỗi, tôi không tìm thấy thông tin về "${message}" trong các tài liệu hiện có. 😔
 
