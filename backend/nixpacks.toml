@@ -1,2 +1,11 @@
 [phases.setup]
 aptPkgs = ["antiword"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["echo 'No build step needed'"]
+
+[start]
+cmd = "npm start"
