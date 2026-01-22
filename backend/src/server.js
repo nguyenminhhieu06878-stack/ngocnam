@@ -34,6 +34,19 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
 
 // Routes
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Backend API Đoàn Thanh Niên đang hoạt động',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      documents: '/api/documents',
+      chat: '/api/chat'
+    }
+  });
+});
+
 app.use('/api/documents', documentRoutes);
 app.use('/api/chat', chatRoutes);
 
