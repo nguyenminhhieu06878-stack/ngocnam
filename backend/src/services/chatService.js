@@ -441,7 +441,6 @@ Bạn có muốn hỏi điều gì khác không?`,
       .join('\n\n---\n\n');
     
     // Tạo câu trả lời với mode phù hợp
-    const mode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
     const response = await generateResponse(message, context, requestedCategory, mode);
     
     return {
