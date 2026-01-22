@@ -2,6 +2,13 @@ import { searchSimilarDocuments } from './vectorService.js';
 import { generateResponse, generateAnalysisResponse } from './aiService.js';
 import Document from '../models/Document.js';
 
+// Function tìm kiếm web (giả lập - trong thực tế cần API key)
+async function searchWeb(query) {
+  // Trong production, bạn có thể dùng Google Custom Search API hoặc SerpAPI
+  // Hiện tại return empty để fallback sang kiến thức chung
+  return [];
+}
+
 // Xử lý câu hỏi chào hỏi và chung chung
 function handleGreetingOrGeneral(message) {
   const lowerMessage = message.toLowerCase().trim();
@@ -341,12 +348,44 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
       
       // Nếu không tìm thấy, lấy tất cả documents
       if (documents.length === 0) {
-        // Không có tài liệu nào → dùng kiến thức chung
-        console.log('🌐 Không có tài liệu, dùng kiến thức chung của AI...');
+        // Không có tài liệu nào → tìm kiếm trên web
+        console.log('🌐 Không có tài liệu, tìm kiếm trên Google...');
         
+        try {
+          // Tìm kiếm trên web
+          const webSearchQuery = `${message} Đoàn thanh niên Việt Nam`;
+          const webResults = await searchWeb(webSearchQuery);
+          
+          if (webResults && webResults.length > 0) {
+            // Tạo context từ kết quả web
+            const webContext = webResults.map((result, idx) => 
+              `[${idx + 1}. ${result.title}]\n${result.snippet}\nNguồn: ${result.url}`
+            ).join('\n\n---\n\n');
+            
+            const response = await generateResponse(
+              message, 
+              `Thông tin từ tìm kiếm web:\n\n${webContext}`,
+              requestedCategory,
+              mode
+            );
+            
+            return {
+              message: response + '\n\n💡 *Lưu ý: Thông tin này được tìm kiếm từ Internet, không có trong tài liệu nội bộ.*',
+              sources: webResults.map(r => ({
+                title: r.title,
+                category: 'Web',
+                url: r.url
+              }))
+            };
+          }
+        } catch (webError) {
+          console.error('Lỗi tìm kiếm web:', webError);
+        }
+        
+        // Fallback: dùng kiến thức chung nếu web search thất bại
         const response = await generateResponse(
           message, 
-          'Không tìm thấy thông tin trong tài liệu nội bộ. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
+          'Không tìm thấy thông tin trong tài liệu nội bộ và web. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
           requestedCategory,
           mode
         );
