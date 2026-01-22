@@ -38,7 +38,7 @@ Hẹn gặp lại bạn khi cần hỗ trợ về Đoàn thanh niên nhé!`;
   
   // Câu hỏi không liên quan đến Đoàn
   const irrelevantTopics = [
-    'thời tiết', 'bóng đá', 'game', 'phim', 'nhạc', 'ăn uống', 
+    'thời tiết', 'bóng đá', 'game', 'phim', 'ăn uống', 
     'du lịch', 'mua sắm', 'thể thao', 'giải trí', 'nấu ăn',
     'thời trang', 'làm đẹp', 'sức khỏe', 'y tế', 'bệnh viện'
   ];
