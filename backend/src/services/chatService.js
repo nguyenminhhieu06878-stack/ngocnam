@@ -362,11 +362,12 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
               `[${idx + 1}. ${result.title}]\n${result.snippet}\nNguồn: ${result.url}`
             ).join('\n\n---\n\n');
             
+            const fallbackMode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
             const response = await generateResponse(
               message, 
               `Thông tin từ tìm kiếm web:\n\n${webContext}`,
               requestedCategory,
-              mode
+              fallbackMode
             );
             
             return {
@@ -383,11 +384,12 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
         }
         
         // Fallback: dùng kiến thức chung nếu web search thất bại
+        const fallbackMode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
         const response = await generateResponse(
           message, 
           'Không tìm thấy thông tin trong tài liệu nội bộ và web. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
           requestedCategory,
-          mode
+          fallbackMode
         );
         
         return {
@@ -415,8 +417,8 @@ Bạn có muốn hỏi điều gì khác không?`,
         `[Tài liệu: ${doc.title} - ${doc.category}]\n${doc.content.substring(0, 2000)}`
       ).join('\n\n---\n\n');
       
-      const mode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
-      const response = await generateResponse(message, context, requestedCategory, mode);
+      const fallbackMode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
+      const response = await generateResponse(message, context, requestedCategory, fallbackMode);
       
       return {
         message: response,
@@ -438,11 +440,12 @@ Bạn có muốn hỏi điều gì khác không?`,
         const webSearchQuery = `${message} Đoàn thanh niên Việt Nam`;
         
         // Tạo response từ kiến thức chung của AI
+        const fallbackMode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
         const response = await generateResponse(
           message, 
           'Không tìm thấy thông tin trong tài liệu nội bộ. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
           requestedCategory,
-          mode
+          fallbackMode
         );
         
         return {
