@@ -284,7 +284,7 @@ export async function processChat(message, conversationHistory) {
     // Phân tích intent
     const { isAnalysis, isAdvisory, isResponsibility, isArticleQuery, articleNumber, requestedCategory } = analyzeIntent(message);
     
-    // Xác định mode dựa trên intent
+    // Xác định mode dựa trên intent (khai báo sớm để dùng trong toàn bộ function)
     const mode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
     
     // Nếu là câu hỏi về điều khoản cụ thể
