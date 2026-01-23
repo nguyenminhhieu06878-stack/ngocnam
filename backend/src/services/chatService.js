@@ -483,7 +483,28 @@ Bạn có muốn hỏi điều gì khác không?`,
       .join('\n\n---\n\n');
     
     // Tạo câu trả lời với mode phù hợp
-    const response = await generateResponse(message, context, requestedCategory, mode);
+    let response = await generateResponse(message, context, requestedCategory, mode);
+    
+    // Kiểm tra nếu AI không tìm thấy thông tin trong tài liệu, thử dùng kiến thức chung
+    const noInfoKeywords = ['không có thông tin', 'không tìm thấy', 'xin lỗi', 'không thể trả lời', 'không cung cấp thông tin', 'tài liệu không'];
+    const hasNoInfo = noInfoKeywords.some(keyword => response.toLowerCase().includes(keyword));
+    
+    if (hasNoInfo) {
+      console.log('⚠️ AI không tìm thấy trong tài liệu, thử dùng kiến thức chung...');
+      
+      // Retry với kiến thức chung
+      const fallbackResponse = await generateResponse(
+        message,
+        'Không tìm thấy thông tin trong tài liệu nội bộ. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
+        requestedCategory,
+        mode
+      );
+      
+      return {
+        message: fallbackResponse + '\n\n💡 *Lưu ý: Thông tin này dựa trên kiến thức chung, không có trong tài liệu nội bộ.*',
+        sources: []
+      };
+    }
     
     return {
       message: response,
