@@ -2,7 +2,8 @@
   "name": "doan-thanh-nien-monorepo",
   "version": "1.0.0",
   "scripts": {
-    "start": "cd backend && npm start",
-    "install-backend": "cd backend && npm ci"
+    "postinstall": "cd backend && npm ci",
+    "start": "cd backend && npm start"
   }
 }
+
