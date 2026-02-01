@@ -284,9 +284,6 @@ export async function processChat(message, conversationHistory) {
     // Phân tích intent
     const { isAnalysis, isAdvisory, isResponsibility, isArticleQuery, articleNumber, requestedCategory } = analyzeIntent(message);
     
-    // Xác định mode dựa trên intent (khai báo sớm để dùng trong toàn bộ function)
-    const mode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
-    
     // Nếu là câu hỏi về điều khoản cụ thể
     if (isArticleQuery && articleNumber) {
       return await handleArticleQuery(articleNumber, message, requestedCategory);
@@ -322,6 +319,9 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
         }))
       };
     }
+    
+    // Xác định mode dựa trên intent (khai báo sớm để dùng trong toàn bộ function)
+    const mode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
     
     // Tìm kiếm tài liệu liên quan (tăng số lượng nếu là câu hỏi tư vấn hoặc nhiệm vụ)
     const topK = isResponsibility ? 15 : isAdvisory ? 10 : 5;
