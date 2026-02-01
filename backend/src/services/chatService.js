@@ -323,9 +323,6 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
       };
     }
     
-    // Xác định mode dựa trên intent (khai báo sớm để dùng trong toàn bộ function)
-    const mode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
-    
     // Tìm kiếm tài liệu liên quan (tăng số lượng nếu là câu hỏi tư vấn hoặc nhiệm vụ)
     const topK = isResponsibility ? 15 : isAdvisory ? 10 : 5;
     let searchResults;
