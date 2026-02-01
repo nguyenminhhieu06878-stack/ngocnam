@@ -333,21 +333,22 @@ ${stats.recentDocuments.map((doc, idx) => `${idx + 1}. ${doc.title} (${doc.categ
     } catch (vectorError) {
       console.warn('⚠️ ChromaDB không khả dụng, fallback sang tìm kiếm MongoDB:', vectorError.message);
       
-      // Fallback: Tìm kiếm trong MongoDB với text search
-      const query = requestedCategory ? { category: requestedCategory, status: 'ready' } : { status: 'ready' };
-      
-      // Thử tìm kiếm text trong content
-      const searchRegex = new RegExp(message.split(' ').filter(w => w.length > 2).join('|'), 'i');
-      const documents = await Document.find({
-        ...query,
-        $or: [
-          { content: searchRegex },
-          { title: searchRegex }
-        ]
-      }).select('title category content').limit(topK);
-      
-      // Nếu không tìm thấy, lấy tất cả documents
-      if (documents.length === 0) {
+      try {
+        // Fallback: Tìm kiếm trong MongoDB với text search
+        const query = requestedCategory ? { category: requestedCategory, status: 'ready' } : { status: 'ready' };
+        
+        // Thử tìm kiếm text trong content
+        const searchRegex = new RegExp(message.split(' ').filter(w => w.length > 2).join('|'), 'i');
+        const documents = await Document.find({
+          ...query,
+          $or: [
+            { content: searchRegex },
+            { title: searchRegex }
+          ]
+        }).select('title category content').limit(topK).maxTimeMS(5000);
+        
+        // Nếu không tìm thấy, lấy tất cả documents
+        if (documents.length === 0) {
         // Không có tài liệu nào → tìm kiếm trên web
         console.log('🌐 Không có tài liệu, tìm kiếm trên Google...');
         
@@ -428,6 +429,23 @@ Bạn có muốn hỏi điều gì khác không?`,
           documentId: doc._id
         }))
       };
+      } catch (mongoError) {
+        console.warn('⚠️ MongoDB không khả dụng, fallback sang kiến thức chung:', mongoError.message);
+        
+        // Fallback cuối cùng: dùng kiến thức chung
+        const fallbackMode = isAdvisory ? 'advisory' : isResponsibility ? 'responsibility' : 'general';
+        const response = await generateResponse(
+          message,
+          'Không kết nối được database. Hãy trả lời dựa trên kiến thức chung về Đoàn thanh niên Cộng sản Hồ Chí Minh.',
+          requestedCategory,
+          fallbackMode
+        );
+        
+        return {
+          message: response + '\n\n💡 *Lưu ý: Thông tin này dựa trên kiến thức chung, không có trong tài liệu nội bộ.*',
+          sources: []
+        };
+      }
     }
     
     // Nếu không tìm thấy tài liệu liên quan, trả lời thân thiện
