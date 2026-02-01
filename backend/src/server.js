@@ -11,7 +11,10 @@ import chatRoutes from './routes/chat.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Load .env file (for local development)
 dotenv.config({ path: join(__dirname, '../.env') });
+
+// Railway environment variables are already loaded, no need for .env file
 
 // Tạo thư mục uploads nếu chưa có (cần thiết cho Railway)
 const uploadsDir = join(__dirname, '../uploads');
@@ -40,12 +43,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI, {
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI không được định nghĩa trong environment variables');
+  console.log('Available env vars:', Object.keys(process.env).filter(k => k.includes('MONGO')));
+  process.exit(1);
+}
+
+console.log('🔗 Đang kết nối MongoDB...');
+mongoose.connect(MONGODB_URI, {
   serverSelectionTimeoutMS: 30000, // Tăng timeout lên 30s
   socketTimeoutMS: 45000,
 })
   .then(() => console.log('✅ Kết nối MongoDB thành công'))
-  .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
+  .catch(err => {
+    console.error('❌ Lỗi kết nối MongoDB:', err);
+    process.exit(1);
+  });
 
 // Routes
 app.get('/', (req, res) => {
